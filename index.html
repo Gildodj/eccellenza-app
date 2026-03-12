@@ -7,36 +7,90 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="manifest.json">
 </head>
-<body class="bg-gray-50 font-sans text-gray-900">
+<body class="bg-slate-50 font-sans text-slate-900">
 
-    <header class="bg-indigo-950 text-white p-6 shadow-md sticky top-0 z-50">
+    <header class="bg-indigo-950 text-white p-6 shadow-lg sticky top-0 z-50">
         <div class="flex justify-between items-center max-w-2xl mx-auto">
             <div>
-                <h1 class="text-xl font-serif italic">Excellence Hub</h1>
-                <p class="text-[10px] uppercase tracking-widest text-indigo-300">Premi & Riconoscimenti 2024-2025</p>
+                <h1 class="text-2xl font-serif italic tracking-tight">Excellence Hub</h1>
+                <p class="text-[10px] uppercase tracking-[0.2em] text-indigo-300 font-bold">Guida alle Eccellenze 2024-2025</p>
             </div>
-            <a href="mailto:guidolugli@gmail.com" class="bg-white/10 p-2 rounded-full hover:bg-white/20 transition">
+            <a href="mailto:guidolugli@gmail.com" class="bg-white/10 p-3 rounded-full hover:bg-white/20 transition-all border border-white/10">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
             </a>
         </div>
     </header>
 
-    <main class="p-4 max-w-2xl mx-auto pb-24">
-        <h2 class="text-2xl font-bold border-b pb-2 mb-6">Le Eccellenze Premiate</h2>
+    <main class="p-4 max-w-2xl mx-auto pb-24 space-y-8">
         
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-4">
-            <div class="flex justify-between items-start mb-2">
-                <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Guida Michelin 2025</span>
-                <span class="text-yellow-500">★★★</span>
-            </div>
-            <h3 class="text-lg font-bold text-gray-800">Osteria Francescana</h3>
-            <p class="text-sm text-gray-600 mt-1 italic">3 Stelle Michelin - Eccellenza mondiale nel cuore di Modena.</p>
-            <div class="mt-4 flex gap-2">
-                <a href="https://osteriafrancescana.it" target="_blank" class="flex-1 bg-indigo-600 text-white text-center py-2 rounded-lg font-bold text-sm">SITO UFFICIALE</a>
-            </div>
-        </div>
+        <section>
+            <h2 class="text-xs font-black text-indigo-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <span class="w-8 h-[1px] bg-indigo-900"></span> Alta Ristorazione
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] font-bold text-red-600 uppercase tracking-tighter">Guida Michelin 2025</span>
+                        <span class="text-yellow-500 text-xs">★★★</span>
+                    </div>
+                    <h3 class="text-lg font-bold">Osteria Francescana</h3>
+                    <p class="text-sm text-slate-500 italic mt-1">Massimo Bottura - Modena Centro</p>
+                    <div class="mt-4 flex gap-2">
+                        <a href="https://osteriafrancescana.it" target="_blank" class="flex-1 bg-indigo-600 text-white text-center py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider">Sito Ufficiale</a>
+                        <button onclick="window.open('https://www.google.com/maps/search/Osteria+Francescana+Modena')" class="px-4 bg-slate-100 text-slate-700 rounded-xl font-bold text-xs uppercase tracking-wider">Mappa</button>
+                    </div>
+                </div>
 
-        <p class="text-center text-gray-400 text-xs mt-8">Tutti i diritti riservati - Guido Lugli</p>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] font-bold text-red-600 uppercase tracking-tighter">Guida Michelin 2025</span>
+                        <span class="text-yellow-500 text-xs">★</span>
+                    </div>
+                    <h3 class="text-lg font-bold">Arnaldo Clinica Gastronomica</h3>
+                    <p class="text-sm text-slate-500 italic mt-1">Rubiera (RE) - La storia della cucina reggiana.</p>
+                    <div class="mt-4 flex gap-2">
+                        <a href="https://www.clinicaarnaldo.it" target="_blank" class="flex-1 bg-indigo-600 text-white text-center py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider">Sito Ufficiale</a>
+                        <button onclick="window.open('https://www.google.com/maps/search/Arnaldo+Clinica+Gastronomica+Rubiera')" class="px-4 bg-slate-100 text-slate-700 rounded-xl font-bold text-xs uppercase tracking-wider">Mappa</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-xs font-black text-amber-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <span class="w-8 h-[1px] bg-amber-800"></span> Oro Nero & Re dei Formaggi
+            </h2>
+            
+            <div class="grid grid-cols-1 gap-4">
+                <div class="bg-amber-50 rounded-2xl p-5 border border-amber-200">
+                    <span class="text-[9px] font-bold text-amber-700 uppercase">Consorteria Spilamberto</span>
+                    <h3 class="text-lg font-bold text-amber-900 leading-tight">Palio di San Giovanni 2024</h3>
+                    <p class="text-xs text-amber-800/70 mt-1 italic italic">I migliori Aceti Balsamici Tradizionali premiati quest'anno.</p>
+                </div>
+
+                <div class="bg-slate-900 rounded-2xl p-5 text-white shadow-xl">
+                    <span class="text-[9px] font-bold text-indigo-400 uppercase">World Cheese Awards</span>
+                    <h3 class="text-lg font-bold leading-tight">Parmigiano Reggiano</h3>
+                    <p class="text-xs text-slate-400 mt-1">I caseifici di Modena e Reggio trionfano con record di medaglie.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-xs font-black text-emerald-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <span class="w-8 h-[1px] bg-emerald-900"></span> Borghi & Cultura
+            </h2>
+            <div class="bg-emerald-50 rounded-2xl p-5 border border-emerald-200">
+                <h3 class="font-bold text-emerald-900 italic">Patrimonio UNESCO</h3>
+                <p class="text-sm text-emerald-800/80 mt-1 leading-relaxed">Duomo, Torre Ghirlandina e Piazza Grande a Modena.</p>
+            </div>
+        </section>
+
+        <footer class="text-center py-8">
+            <p class="text-[10px] text-slate-400 font-medium uppercase tracking-[0.3em]">© 2026 Guido Lugli - Campogalliano</p>
+        </footer>
+
     </main>
 
 </body>
