@@ -1,121 +1,796 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excellence Hub - Modena & Reggio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="manifest" href="manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eccellenze Emiliane 2024-2025 - Modena & Reggio Emilia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--ink:#1a1208;--gold:#b8963e;--gold-lt:#e8cc7a;--cream:#faf6ee;--warm:#f3ead6;--muted:#7a6a4f;--border:#e2d5bb;--re:#8b2635;--mo:#1e4d6b}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--cream);color:var(--ink)}
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+/* NAV */
+#nav{background:var(--ink);display:flex;align-items:center;padding:0 16px;height:50px;gap:10px;flex-shrink:0}
+#nav h1{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:var(--gold-lt);white-space:nowrap;margin-right:6px}
+#nav h1 span{color:#fff;font-style:italic}
+.nav-tabs{display:flex;gap:2px}
+.nav-tab{background:none;border:none;color:#a09070;font-family:'Outfit',sans-serif;font-size:.7rem;font-weight:500;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all .15s}
+.nav-tab.active{background:rgba(184,150,62,.2);color:var(--gold-lt)}
+.nav-tab:hover:not(.active){background:rgba(255,255,255,.07);color:#ccc}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.hstats{display:flex;gap:5px}
+.hstat{background:rgba(184,150,62,.12);border:1px solid rgba(184,150,62,.25);border-radius:16px;padding:2px 8px;text-align:center}
+.hstat strong{display:block;font-size:.8rem;font-weight:700;color:var(--gold-lt);line-height:1.1}
+.hstat small{font-size:.5rem;color:#a09070;text-transform:uppercase;letter-spacing:.05em}
+.mail-link{color:var(--gold-lt);font-size:.68rem;text-decoration:none;padding:4px 9px;border:1px solid rgba(184,150,62,.35);border-radius:16px;white-space:nowrap;transition:all .15s}
+.mail-link:hover{background:rgba(184,150,62,.15)}
+/* PAGES */
+.page{display:none;flex:1;overflow:hidden;flex-direction:column}
+.page.active{display:flex}
+/* MAP PAGE */
+#toolbar{background:var(--warm);border-bottom:1px solid var(--border);padding:6px 12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0}
+#search-wrap{position:relative;flex:1;min-width:140px;max-width:220px}
+#search-wrap svg{position:absolute;left:8px;top:50%;transform:translateY(-50%);width:12px;height:12px;stroke:var(--muted);fill:none;stroke-width:2}
+#search{width:100%;padding:5px 9px 5px 26px;border:1.5px solid var(--border);border-radius:7px;background:#fff;font-family:'Outfit',sans-serif;font-size:.75rem;color:var(--ink);outline:none}
+#search:focus{border-color:var(--gold)}
+.filters{display:flex;gap:3px;flex-wrap:wrap}
+.filt{border:1.5px solid var(--border);background:#fff;border-radius:6px;padding:4px 8px;font-size:.65rem;font-family:'Outfit',sans-serif;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:3px;color:var(--muted)}
+.filt.active{background:var(--ink);border-color:var(--ink);color:var(--gold-lt)}
+.filt:hover:not(.active){border-color:var(--gold)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.view-tog{display:flex;border:1.5px solid var(--border);border-radius:7px;overflow:hidden;margin-left:auto}
+.view-tog button{background:#fff;border:none;padding:4px 9px;font-size:.67rem;font-family:'Outfit',sans-serif;cursor:pointer;color:var(--muted);transition:all .15s}
+.view-tog button.active{background:var(--ink);color:var(--gold-lt)}
+.view-tog button+button{border-left:1.5px solid var(--border)}
+.prov-filt{display:flex;gap:3px}
+.prov-btn{border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.65rem;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Outfit',sans-serif;background:#fff;color:var(--muted)}
+.prov-btn.on-mo{background:var(--mo);border-color:var(--mo);color:#fff}
+.prov-btn.on-re{background:var(--re);border-color:var(--re);color:#fff}
+#map-body{display:flex;flex:1;overflow:hidden}
+#sidebar{width:300px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+#sb-head{padding:6px 12px;border-bottom:1px solid #f0e8d5;display:flex;align-items:center;justify-content:space-between;background:var(--cream);flex-shrink:0;font-size:.66rem;color:var(--muted)}
+#list{overflow-y:auto;flex:1}
+.pcard{padding:8px 12px;border-bottom:1px solid #f5ede0;cursor:pointer;border-left:3px solid transparent;transition:all .12s}
+.pcard:hover{background:#fdf6ea}
+.pcard.sel{background:#fff8ec;border-left-color:var(--gold)}
+.pcard-top{display:flex;align-items:flex-start;gap:7px;margin-bottom:4px}
+.pcard-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.pcard-name{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:.84rem;color:var(--ink);line-height:1.2}
+.pcard-loc{font-size:.6rem;color:var(--muted);margin-top:1px;display:flex;align-items:center;gap:3px;flex-wrap:wrap}
+.pcard-prov{font-size:.5rem;font-weight:600;padding:1px 4px;border-radius:8px;text-transform:uppercase}
+.prov-mo{background:#e8f0f7;color:var(--mo)}
+.prov-re{background:#f9eaec;color:var(--re)}
+.awards-row{display:flex;flex-wrap:wrap;gap:2px}
+.abadge{font-size:.54rem;font-weight:600;padding:2px 4px;border-radius:8px;display:inline-flex;align-items:center;gap:2px;line-height:1.3}
+.ab-michelin{background:#fff0f0;color:#9b2918}
+.ab-gambero{background:#fff3e5;color:#b54900}
+.ab-slowfood{background:#edf7ee;color:#1d6e38}
+.ab-cheese{background:#fff9e5;color:#7a5c00}
+.ab-vinegar{background:#fef0ff;color:#6e2d8a}
+.ab-touring{background:#fff8e0;color:#7a6000}
+.ab-other{background:#eef1ff;color:#2840a0}
+.ab-la-liste{background:#f0f8ff;color:#0050a0}
+.web-chip{display:inline-flex;align-items:center;gap:2px;font-size:.55rem;color:var(--gold);background:#fff8e8;border:1px solid #e8d09a;border-radius:7px;padding:1px 5px;text-decoration:none;font-weight:600}
+#map-wrap{flex:1;position:relative;overflow:hidden}
+#map{width:100%;height:100%}
+#detail{position:absolute;bottom:12px;right:12px;width:280px;background:#fff;border-radius:13px;box-shadow:0 8px 36px rgba(0,0,0,.18);overflow:hidden;z-index:500;display:none;animation:popIn .2s ease}
+@keyframes popIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:scale(1)translateY(0)}}
+.det-head{background:var(--ink);padding:11px 13px;position:relative}
+.det-cat{font-size:.56rem;text-transform:uppercase;letter-spacing:.1em;color:#a09070;margin-bottom:2px}
+.det-name{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:.95rem;color:#fff;line-height:1.2}
+.det-loc{font-size:.62rem;color:#a09070;margin-top:2px}
+.det-close{position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;border:none;cursor:pointer;font-size:.75rem;display:flex;align-items:center;justify-content:center}
+.det-body{padding:10px 12px;max-height:250px;overflow-y:auto}
+.det-desc{font-size:.71rem;color:#4a3520;line-height:1.6;margin-bottom:8px}
+.det-awards{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+.det-award{display:flex;align-items:flex-start;gap:4px;padding:4px 6px;background:var(--warm);border-radius:6px;font-size:.64rem;font-weight:500;color:var(--ink);line-height:1.4}
+.det-award .aic{font-size:.8rem;flex-shrink:0}
+.det-actions{display:flex;gap:4px;flex-wrap:wrap}
+.det-btn{flex:1;min-width:55px;padding:5px 4px;border-radius:6px;font-size:.66rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;border:none;text-align:center;transition:all .15s;white-space:nowrap}
+.det-web{background:var(--gold);color:var(--ink)}
+.det-link{background:var(--ink);color:var(--gold-lt)}
+.det-share{background:var(--warm);color:var(--muted);border:1.5px solid var(--border)}
+#legend{position:absolute;top:10px;left:10px;background:rgba(255,255,255,.95);border-radius:9px;padding:8px 10px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:500;font-size:.6rem}
+#legend h4{font-size:.56rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px;font-weight:600}
+.leg-row{display:flex;align-items:center;gap:4px;margin-bottom:2px;color:var(--ink)}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+#grid-view{flex:1;overflow-y:auto;padding:16px;background:var(--cream);display:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.gcard{background:#fff;border-radius:11px;border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:all .2s;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.gcard:hover{transform:translateY(-2px);box-shadow:0 7px 20px rgba(0,0,0,.11)}
+.gcard-img{height:60px;display:flex;align-items:center;justify-content:center;font-size:1.8rem}
+.gcard-body{padding:8px 10px}
+.gcard-name{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:.84rem;color:var(--ink);line-height:1.3;margin-bottom:2px}
+.gcard-city{font-size:.6rem;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:3px;flex-wrap:wrap}
+.gcard-awards{display:flex;flex-wrap:wrap;gap:2px}
+/* ROUTES PAGE */
+.content-page{flex:1;overflow-y:auto;background:var(--cream)}
+.content-wrap{max-width:900px;margin:0 auto;padding:28px 18px 50px}
+.sec-hdr{margin-bottom:24px}
+.sec-hdr h2{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;color:var(--ink)}
+.sec-hdr h2 span{color:var(--gold)}
+.sec-hdr p{font-size:.76rem;color:var(--muted);margin-top:5px;line-height:1.6;max-width:540px}
+.routes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.route-card{background:#fff;border-radius:14px;border:1px solid var(--border);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);transition:all .2s}
+.route-card:hover{transform:translateY(-2px);box-shadow:0 9px 28px rgba(0,0,0,.11)}
+.route-hero{height:80px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:relative;overflow:hidden}
+.route-hero::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.15)}
+.route-emoji{font-size:2.4rem;position:relative;z-index:1}
+.route-kms{position:relative;z-index:1;text-align:right}
+.route-kms strong{display:block;font-size:1.2rem;font-weight:700;color:#fff;line-height:1}
+.route-kms span{font-size:.6rem;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.07em}
+.route-body{padding:14px 16px}
+.route-title{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:1.05rem;color:var(--ink);margin-bottom:5px;line-height:1.2}
+.route-desc{font-size:.72rem;color:#5a4a30;line-height:1.6;margin-bottom:10px}
+.route-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.route-tag{font-size:.58rem;font-weight:600;padding:2px 7px;border-radius:9px;background:var(--warm);color:var(--muted);border:1px solid var(--border)}
+.route-stops{border-top:1px solid var(--border);padding-top:10px}
+.route-stops h4{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-bottom:6px}
+.stop-row{display:flex;align-items:center;gap:7px;padding:3px 4px;cursor:pointer;border-radius:5px;transition:background .12s;margin:-3px -4px}
+.stop-row:hover{background:var(--warm)}
+.stop-num{width:18px;height:18px;border-radius:50%;background:var(--ink);color:var(--gold-lt);font-size:.58rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stop-info{flex:1}
+.stop-name{font-size:.7rem;font-weight:600;color:var(--ink)}
+.stop-city{font-size:.58rem;color:var(--muted)}
+.route-footer{padding:8px 16px 14px;display:flex;gap:7px}
+.route-btn{flex:1;padding:6px;border-radius:7px;font-size:.67rem;font-weight:600;font-family:'Outfit',sans-serif;border:none;cursor:pointer;transition:all .15s;text-align:center}
+.rbtn-map{background:var(--ink);color:var(--gold-lt)}
+.rbtn-info{background:var(--warm);color:var(--muted);border:1px solid var(--border);text-decoration:none;display:flex;align-items:center;justify-content:center}
+/* EVENTS PAGE */
+.season-tabs{display:flex;gap:5px;margin-bottom:20px;flex-wrap:wrap}
+.season-tab{border:1.5px solid var(--border);background:#fff;border-radius:7px;padding:6px 12px;font-size:.69rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .15s;color:var(--muted)}
+.season-tab.active{background:var(--ink);border-color:var(--ink);color:var(--gold-lt)}
+.season-tab:hover:not(.active){border-color:var(--gold)}
+.events-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:14px}
+.event-card{background:#fff;border-radius:13px;border:1px solid var(--border);overflow:hidden;box-shadow:0 2px 7px rgba(0,0,0,.06);transition:all .2s}
+.event-card:hover{transform:translateY(-2px);box-shadow:0 7px 22px rgba(0,0,0,.1)}
+.event-month-bar{padding:7px 13px;display:flex;align-items:center;justify-content:space-between}
+.event-month{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff}
+.event-type-badge{font-size:.54rem;font-weight:700;padding:2px 6px;border-radius:8px;background:rgba(255,255,255,.25);color:#fff;text-transform:uppercase;letter-spacing:.05em}
+.event-body{padding:12px 14px}
+.event-title{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:.95rem;color:var(--ink);line-height:1.3;margin-bottom:4px}
+.event-date{font-size:.63rem;color:var(--gold);font-weight:600;margin-bottom:4px}
+.event-place{font-size:.63rem;color:var(--muted);margin-bottom:6px}
+.event-desc{font-size:.7rem;color:#5a4a30;line-height:1.6}
+.event-links{padding:7px 14px 12px;display:flex;gap:5px;flex-wrap:wrap}
+.event-link{font-size:.61rem;font-weight:600;color:var(--gold);background:#fff8e8;border:1px solid #e8d09a;border-radius:6px;padding:3px 8px;text-decoration:none}
+.event-link:hover{background:#fff0cc}
+.event-place-link{font-size:.61rem;font-weight:600;color:var(--ink);background:var(--warm);border:1px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer;font-family:'Outfit',sans-serif}
+/* BLOG PAGE */
+.blog-wrap{max-width:800px;margin:0 auto;padding:28px 18px 50px}
+.blog-hdr{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;gap:10px;flex-wrap:wrap}
+.blog-hdr h2{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;color:var(--ink)}
+.blog-hdr h2 span{color:var(--gold)}
+.btn-new{background:var(--ink);color:var(--gold-lt);border:none;border-radius:8px;padding:8px 16px;font-size:.72rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;display:flex;align-items:center;gap:5px}
+.btn-new:hover{background:#2d200d}
+.posts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.post-card{background:#fff;border-radius:13px;border:1px solid var(--border);overflow:hidden;box-shadow:0 2px 7px rgba(0,0,0,.06);cursor:pointer;transition:all .2s}
+.post-card:hover{transform:translateY(-2px);box-shadow:0 7px 24px rgba(0,0,0,.1)}
+.post-cat-bar{height:4px}
+.post-body{padding:14px 16px}
+.post-meta{display:flex;align-items:center;gap:6px;margin-bottom:7px;flex-wrap:wrap}
+.post-tag{font-size:.56rem;font-weight:700;padding:2px 7px;border-radius:16px;text-transform:uppercase;letter-spacing:.05em}
+.post-date{font-size:.6rem;color:var(--muted)}
+.post-place-tag{font-size:.58rem;background:var(--warm);color:var(--muted);padding:2px 6px;border-radius:9px;border:1px solid var(--border)}
+.post-title{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:1rem;color:var(--ink);line-height:1.3;margin-bottom:6px}
+.post-excerpt{font-size:.71rem;color:#5a4a30;line-height:1.65}
+.post-footer{padding:8px 16px 12px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);margin-top:8px}
+.post-author{font-size:.6rem;color:var(--muted)}
+.post-read{font-size:.62rem;color:var(--gold);font-weight:600;background:none;border:none;font-family:'Outfit',sans-serif;cursor:pointer}
+.blog-contact{background:var(--ink);border-radius:11px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-top:32px;gap:10px;flex-wrap:wrap}
+.blog-contact p{font-size:.74rem;color:#c0a870;line-height:1.5}
+.blog-contact p strong{color:var(--gold-lt);font-family:'Cormorant Garamond',serif;font-size:.88rem}
+.blog-contact a{color:var(--gold-lt);font-size:.72rem;font-weight:600;text-decoration:none;background:rgba(184,150,62,.18);border:1px solid rgba(184,150,62,.35);border-radius:16px;padding:6px 14px;transition:all .15s}
+.blog-contact a:hover{background:rgba(184,150,62,.32)}
+/* MODALS */
+#post-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;align-items:center;justify-content:center;padding:16px}
+#post-modal.show{display:flex}
+.pm-box{background:#fff;border-radius:16px;max-width:600px;width:100%;max-height:84vh;overflow-y:auto;box-shadow:0 20px 70px rgba(0,0,0,.28);animation:slideUp .22s ease}
+@keyframes slideUp{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+.pm-head{background:var(--ink);padding:18px 20px;position:relative}
+.pm-tag{font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;color:#a09070;margin-bottom:4px}
+.pm-title{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:700;color:#fff;line-height:1.3}
+.pm-meta{font-size:.62rem;color:#a09070;margin-top:5px}
+.pm-close{position:absolute;top:12px;right:12px;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center}
+.pm-body{padding:18px 22px}
+.pm-content{font-size:.82rem;color:#3a2a10;line-height:1.85;white-space:pre-wrap}
+.pm-place-link{display:inline-flex;align-items:center;gap:5px;background:var(--warm);border:1px solid var(--border);padding:5px 11px;border-radius:7px;font-size:.7rem;font-weight:600;color:var(--ink);cursor:pointer;margin-top:14px;transition:all .15s}
+.pm-del{background:#fdecea;color:#9b2918;border:1px solid #f5c0ba;border-radius:6px;padding:5px 11px;font-size:.65rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;margin-top:8px;float:right}
+#pfm{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:3000;align-items:center;justify-content:center;padding:16px}
+#pfm.show{display:flex}
+.pfm-box{background:#fff;border-radius:14px;max-width:540px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 70px rgba(0,0,0,.28)}
+.pfm-head{background:#2c4a1e;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.pfm-head h3{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:#e8f5e2}
+.pfm-x{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center}
+.pfm-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.pfm-row{display:flex;flex-direction:column;gap:3px}
+.pfm-row label{font-size:.65rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.pfm-row input,.pfm-row textarea,.pfm-row select{border:1.5px solid var(--border);border-radius:7px;padding:7px 10px;font-family:'Outfit',sans-serif;font-size:.78rem;color:var(--ink);outline:none;background:#fafafa;width:100%}
+.pfm-row input:focus,.pfm-row textarea:focus,.pfm-row select:focus{border-color:var(--gold);background:#fff}
+.pfm-row textarea{resize:vertical;min-height:120px;line-height:1.6}
+.pfm-acts{display:flex;gap:7px;justify-content:flex-end;padding:0 20px 18px}
+.pfm-cancel{background:var(--warm);border:1.5px solid var(--border);border-radius:7px;padding:7px 16px;font-family:'Outfit',sans-serif;font-size:.72rem;font-weight:600;color:var(--muted);cursor:pointer}
+.pfm-submit{background:var(--ink);color:var(--gold-lt);border:none;border-radius:7px;padding:7px 20px;font-family:'Outfit',sans-serif;font-size:.72rem;font-weight:600;cursor:pointer}
+.pwd-gate{background:var(--warm);border:1px solid var(--border);border-radius:9px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.pwd-gate label{font-size:.65rem;color:var(--muted);font-weight:600;text-transform:uppercase}
+.pwd-row{display:flex;gap:6px}
+.pwd-row input{flex:1;border:1.5px solid var(--border);border-radius:6px;padding:6px 9px;font-family:'Outfit',sans-serif;font-size:.78rem;outline:none}
+.pwd-row input:focus{border-color:var(--gold)}
+.pwd-row button{background:var(--ink);color:var(--gold-lt);border:none;border-radius:6px;padding:6px 13px;font-size:.7rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer}
+.pwd-err{font-size:.65rem;color:#9b2918;display:none}
+.form-locked{opacity:.45;pointer-events:none}
+.empty{padding:40px 16px;text-align:center;color:var(--muted)}
+.empty .ei{font-size:2.2rem;margin-bottom:8px}
+.empty p{font-size:.78rem}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#d5c5a8;border-radius:4px}
+@media(max-width:768px){#sidebar,#legend{display:none}#detail{width:calc(100% - 16px);right:8px;bottom:8px}.routes-grid,.events-grid,.posts-grid{grid-template-columns:1fr}.hstats{display:none}}
+</style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-900">
+<body>
+<div id="app">
+<nav id="nav">
+  <h1 class="serif">🏆 Eccellenze <span>Emiliane</span></h1>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('map',this)">🗺️ Mappa</button>
+    <button class="nav-tab" onclick="showPage('routes',this)">🚗 Percorsi</button>
+    <button class="nav-tab" onclick="showPage('events',this)">📅 Eventi</button>
+    <button class="nav-tab" onclick="showPage('blog',this)">📰 Blog</button>
+  </div>
+  <div class="nav-right">
+    <div class="hstats" id="hstats"></div>
+    <a class="mail-link" href="mailto:guidolugli@gmail.com">✉️ guidolugli@gmail.com</a>
+  </div>
+</nav>
 
-    <header class="bg-indigo-950 text-white p-6 shadow-lg sticky top-0 z-50">
-        <div class="flex justify-between items-center max-w-2xl mx-auto">
-            <div>
-                <h1 class="text-2xl font-serif italic tracking-tight">Excellence Hub</h1>
-                <p class="text-[10px] uppercase tracking-[0.2em] text-indigo-300 font-bold">Guida alle Eccellenze 2024-2025</p>
-            </div>
-            <a href="mailto:guidolugli@gmail.com" class="bg-white/10 p-3 rounded-full hover:bg-white/20 transition-all border border-white/10">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-            </a>
+<!-- MAPPA -->
+<div id="map-page" class="page active">
+  <div id="toolbar">
+    <div id="search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="search" type="text" placeholder="Cerca nome, città, guida…">
+    </div>
+    <div class="prov-filt">
+      <button class="prov-btn on-mo" onclick="toggleProv('MO',this)">📍 MO</button>
+      <button class="prov-btn on-re" onclick="toggleProv('RE',this)">📍 RE</button>
+    </div>
+    <div class="filters" id="cat-filters"></div>
+    <div class="view-tog">
+      <button class="active" onclick="setView('map',this)">🗺 Mappa</button>
+      <button onclick="setView('grid',this)">⊞ Griglia</button>
+    </div>
+  </div>
+  <div id="map-body">
+    <aside id="sidebar">
+      <div id="sb-head"><span><strong id="count">0</strong> risultati</span><button id="clr" style="font-size:.65rem;color:var(--gold);background:none;border:none;cursor:pointer;display:none" onclick="clearSearch()">× Cancella</button></div>
+      <div id="list"></div>
+    </aside>
+    <div id="map-wrap">
+      <div id="map"></div>
+      <div id="legend"><h4>Categorie</h4><div id="leg-items"></div></div>
+      <div id="detail">
+        <div class="det-head">
+          <div class="det-cat" id="det-cat"></div>
+          <div class="det-name" id="det-name"></div>
+          <div class="det-loc" id="det-loc"></div>
+          <button class="det-close" onclick="closeDetail()">✕</button>
         </div>
-    </header>
+        <div class="det-body">
+          <p class="det-desc" id="det-desc"></p>
+          <div class="det-awards" id="det-awards"></div>
+          <div class="det-actions" id="det-actions"></div>
+        </div>
+      </div>
+    </div>
+    <div id="grid-view"><div class="grid" id="grid"></div></div>
+  </div>
+</div>
 
-    <main class="p-4 max-w-2xl mx-auto pb-24 space-y-8">
-        
-        <section>
-            <h2 class="text-xs font-black text-indigo-900 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <span class="w-8 h-[1px] bg-indigo-900"></span> Alta Ristorazione
-            </h2>
-            
-            <div class="space-y-4">
-                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-[10px] font-bold text-red-600 uppercase tracking-tighter">Guida Michelin 2025</span>
-                        <span class="text-yellow-500 text-xs">★★★</span>
-                    </div>
-                    <h3 class="text-lg font-bold">Osteria Francescana</h3>
-                    <p class="text-sm text-slate-500 italic mt-1">Massimo Bottura - Modena Centro</p>
-                    <div class="mt-4 flex gap-2">
-                        <a href="https://osteriafrancescana.it" target="_blank" class="flex-1 bg-indigo-600 text-white text-center py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider">Sito Ufficiale</a>
-                        <button onclick="window.open('https://www.google.com/maps/search/Osteria+Francescana+Modena')" class="px-4 bg-slate-100 text-slate-700 rounded-xl font-bold text-xs uppercase tracking-wider">Mappa</button>
-                    </div>
-                </div>
+<!-- PERCORSI -->
+<div id="routes-page" class="page content-page">
+  <div class="content-wrap">
+    <div class="sec-hdr">
+      <h2 class="serif">🚗 Percorsi <span>Tematici</span></h2>
+      <p>Itinerari guidati tra le eccellenze di Modena e Reggio Emilia. Ogni percorso collega luoghi premiati per territorio, prodotto e scoperta. Clicca su una tappa per vederla sulla mappa.</p>
+    </div>
+    <div class="routes-grid" id="routes-grid"></div>
+  </div>
+</div>
 
-                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-[10px] font-bold text-red-600 uppercase tracking-tighter">Guida Michelin 2025</span>
-                        <span class="text-yellow-500 text-xs">★</span>
-                    </div>
-                    <h3 class="text-lg font-bold">Arnaldo Clinica Gastronomica</h3>
-                    <p class="text-sm text-slate-500 italic mt-1">Rubiera (RE) - La storia della cucina reggiana.</p>
-                    <div class="mt-4 flex gap-2">
-                        <a href="https://www.clinicaarnaldo.it" target="_blank" class="flex-1 bg-indigo-600 text-white text-center py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider">Sito Ufficiale</a>
-                        <button onclick="window.open('https://www.google.com/maps/search/Arnaldo+Clinica+Gastronomica+Rubiera')" class="px-4 bg-slate-100 text-slate-700 rounded-xl font-bold text-xs uppercase tracking-wider">Mappa</button>
-                    </div>
-                </div>
-            </div>
-        </section>
+<!-- EVENTI -->
+<div id="events-page" class="page content-page">
+  <div class="content-wrap">
+    <div class="sec-hdr">
+      <h2 class="serif">📅 Eventi <span>& Calendario</span></h2>
+      <p>Sagre, fiere, concorsi e manifestazioni legate al territorio, ai comuni e alle aziende di eccellenza di Modena e Reggio Emilia.</p>
+    </div>
+    <div class="season-tabs">
+      <button class="season-tab active" onclick="filterEvents('all',this)">🗓️ Tutti</button>
+      <button class="season-tab" onclick="filterEvents('primavera',this)">🌸 Primavera</button>
+      <button class="season-tab" onclick="filterEvents('estate',this)">☀️ Estate</button>
+      <button class="season-tab" onclick="filterEvents('autunno',this)">🍂 Autunno</button>
+      <button class="season-tab" onclick="filterEvents('inverno',this)">❄️ Inverno</button>
+      <button class="season-tab" onclick="filterEvents('MO',this)">📍 Modena</button>
+      <button class="season-tab" onclick="filterEvents('RE',this)">📍 Reggio E.</button>
+    </div>
+    <div class="events-grid" id="events-grid"></div>
+  </div>
+</div>
 
-        <section>
-            <h2 class="text-xs font-black text-amber-800 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <span class="w-8 h-[1px] bg-amber-800"></span> Oro Nero & Re dei Formaggi
-            </h2>
-            
-            <div class="grid grid-cols-1 gap-4">
-                <div class="bg-amber-50 rounded-2xl p-5 border border-amber-200">
-                    <span class="text-[9px] font-bold text-amber-700 uppercase">Consorteria Spilamberto</span>
-                    <h3 class="text-lg font-bold text-amber-900 leading-tight">Palio di San Giovanni 2024</h3>
-                    <p class="text-xs text-amber-800/70 mt-1 italic italic">I migliori Aceti Balsamici Tradizionali premiati quest'anno.</p>
-                </div>
+<!-- BLOG -->
+<div id="blog-page" class="page content-page">
+  <div class="blog-wrap">
+    <div class="blog-hdr">
+      <div><h2 class="serif">📰 Blog <span>&amp; Notizie</span></h2><p style="font-size:.75rem;color:var(--muted);margin-top:4px">Aggiornamenti su nuovi premi e notizie del territorio.</p></div>
+      <button class="btn-new" onclick="openPostForm()">✏️ Nuovo articolo</button>
+    </div>
+    <div class="posts-grid" id="posts-grid"></div>
+    <div class="blog-contact">
+      <div><strong>Hai notizie o segnalazioni?</strong><p>Scrivi a Guido Lugli per segnalare nuovi premi, aggiornamenti o attività da aggiungere.</p></div>
+      <a href="mailto:guidolugli@gmail.com">✉️ guidolugli@gmail.com</a>
+    </div>
+  </div>
+</div>
 
-                <div class="bg-slate-900 rounded-2xl p-5 text-white shadow-xl">
-                    <span class="text-[9px] font-bold text-indigo-400 uppercase">World Cheese Awards</span>
-                    <h3 class="text-lg font-bold leading-tight">Parmigiano Reggiano</h3>
-                    <p class="text-xs text-slate-400 mt-1">I caseifici di Modena e Reggio trionfano con record di medaglie.</p>
-                </div>
-            </div>
-        </section>
+<!-- POST READ MODAL -->
+<div id="post-modal">
+  <div class="pm-box">
+    <div class="pm-head">
+      <div class="pm-tag" id="pm-tag"></div>
+      <div class="pm-title" id="pm-title"></div>
+      <div class="pm-meta" id="pm-meta"></div>
+      <button class="pm-close" onclick="closePostModal()">✕</button>
+    </div>
+    <div class="pm-body">
+      <div class="pm-content" id="pm-content"></div>
+      <div id="pm-place-btn"></div>
+      <div style="overflow:hidden;margin-top:6px"><button class="pm-del" id="pm-del-btn" onclick="deleteCurrentPost()">🗑 Elimina</button></div>
+    </div>
+  </div>
+</div>
 
-        <section>
-            <h2 class="text-xs font-black text-emerald-900 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <span class="w-8 h-[1px] bg-emerald-900"></span> Borghi & Cultura
-            </h2>
-            <div class="bg-emerald-50 rounded-2xl p-5 border border-emerald-200">
-                <h3 class="font-bold text-emerald-900 italic">Patrimonio UNESCO</h3>
-                <p class="text-sm text-emerald-800/80 mt-1 leading-relaxed">Duomo, Torre Ghirlandina e Piazza Grande a Modena.</p>
-            </div>
-        </section>
+<!-- POST FORM MODAL -->
+<div id="pfm">
+  <div class="pfm-box">
+    <div class="pfm-head"><h3>✏️ Nuovo articolo</h3><button class="pfm-x" onclick="closePostForm()">✕</button></div>
+    <div class="pfm-body">
+      <div class="pwd-gate" id="pwd-gate">
+        <label>🔒 Password redazione</label>
+        <div class="pwd-row">
+          <input type="password" id="pwd-input" placeholder="Password…" onkeydown="if(event.key==='Enter')checkPwd()">
+          <button onclick="checkPwd()">Accedi</button>
+        </div>
+        <div class="pwd-err" id="pwd-err">❌ Password non corretta</div>
+      </div>
+      <div id="pf-fields" class="form-locked">
+        <div class="pfm-row"><label>Titolo *</label><input type="text" id="pf-title" placeholder="Titolo articolo…"></div>
+        <div class="pfm-row"><label>Categoria</label>
+          <select id="pf-cat">
+            <option value="premio">🏅 Nuovo premio</option><option value="notizia">📰 Notizia</option>
+            <option value="michelin">⭐ Michelin</option><option value="gambero">🍷 Gambero Rosso</option>
+            <option value="slowfood">🐌 Slow Food</option><option value="cheese">🧀 Formaggi</option>
+            <option value="vinegar">🫙 Aceto Balsamico</option><option value="apertura">🎉 News attività</option>
+          </select>
+        </div>
+        <div class="pfm-row"><label>Attività collegata (opz.)</label><select id="pf-place"><option value="">— Nessuna —</option></select></div>
+        <div class="pfm-row"><label>Autore</label><input type="text" id="pf-author" value="Guido Lugli"></div>
+        <div class="pfm-row"><label>Testo *</label><textarea id="pf-content" placeholder="Testo articolo…"></textarea></div>
+      </div>
+    </div>
+    <div class="pfm-acts">
+      <button class="pfm-cancel" onclick="closePostForm()">Annulla</button>
+      <button class="pfm-submit" id="pfm-submit" onclick="submitPost()" disabled>Pubblica</button>
+    </div>
+  </div>
+</div>
 
-        <footer class="text-center py-8">
-            <p class="text-[10px] text-slate-400 font-medium uppercase tracking-[0.3em]">© 2026 Guido Lugli - Campogalliano</p>
-<section>
-            <h2 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <span class="w-8 h-[1px] bg-slate-500"></span> Blog & Notizie dal Territorio
-            </h2>
-            
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="p-5 border-b border-slate-100">
-                    <span class="text-[9px] font-bold text-indigo-600 uppercase">12 Marzo 2026</span>
-                    <h3 class="font-bold text-slate-800 mt-1">Nuovi premiati Gambero Rosso 2026</h3>
-                    <p class="text-sm text-slate-500 mt-2 leading-relaxed">
-                        Le eccellenze di Modena e Reggio Emilia continuano a stupire. Ecco la lista dei nuovi ingressi nella guida...
-                    </p>
-                    <button class="text-indigo-600 text-xs font-bold mt-3 uppercase tracking-wider">Leggi di più</button>
-                </div>
-                
-                <div class="p-5">
-                    <span class="text-[9px] font-bold text-indigo-600 uppercase">10 Marzo 2026</span>
-                    <h3 class="font-bold text-slate-800 mt-1">Guida ai Borghi Bandiera Arancione</h3>
-                    <p class="text-sm text-slate-500 mt-2 leading-relaxed">
-                        Un viaggio tra i borghi più belli del nostro territorio, da Castelvetro a Gualtieri.
-                    </p>
-                    <button class="text-indigo-600 text-xs font-bold mt-3 uppercase tracking-wider">Leggi di più</button>
-                </div>
-            </div>
-        </section></footer>
+<script>
+const CATS={
+  ristorante:{color:'#c0392b',bg:'#fdecea',label:'Ristorante',emoji:'🍽️'},
+  osteria:{color:'#27ae60',bg:'#eafaf1',label:'Osteria',emoji:'🥘'},
+  cantina:{color:'#7d3c98',bg:'#f5eeff',label:'Cantina',emoji:'🍷'},
+  acetaia:{color:'#d35400',bg:'#fff3e6',label:'Acetaia',emoji:'🫙'},
+  caseificio:{color:'#d4ac0d',bg:'#fef9e7',label:'Caseificio',emoji:'🧀'},
+  hotel:{color:'#2471a3',bg:'#eaf4fb',label:'Hotel',emoji:'🏨'},
+  borgo:{color:'#7e5109',bg:'#fdf5e6',label:'Borgo',emoji:'🏰'},
+  monumento:{color:'#5d6d7e',bg:'#eaecee',label:'Monumento',emoji:'🏛️'},
+};
+const AT={
+  michelin:{cls:'ab-michelin',ic:'⭐'},gambero:{cls:'ab-gambero',ic:'🍷'},
+  slowfood:{cls:'ab-slowfood',ic:'🐌'},cheese:{cls:'ab-cheese',ic:'🧀'},
+  vinegar:{cls:'ab-vinegar',ic:'🫙'},touring:{cls:'ab-touring',ic:'🟠'},
+  laliste:{cls:'ab-la-liste',ic:'🌟'},other:{cls:'ab-other',ic:'🏅'},
+};
+const POST_CATS={
+  premio:{color:'#b8963e',bg:'#fff8e8',label:'Premio'},notizia:{color:'#2471a3',bg:'#eaf4fb',label:'Notizia'},
+  michelin:{color:'#9b2918',bg:'#fff0f0',label:'Michelin'},gambero:{color:'#b54900',bg:'#fff3e5',label:'Gambero Rosso'},
+  slowfood:{color:'#1d6e38',bg:'#edf7ee',label:'Slow Food'},cheese:{color:'#7a5c00',bg:'#fff9e5',label:'Formaggi'},
+  vinegar:{color:'#6e2d8a',bg:'#fef0ff',label:'Aceto'},apertura:{color:'#2c4a1e',bg:'#eaf2e4',label:'News'},
+};
 
-    </main>
+const PLACES=[
+  {id:1,prov:'MO',cat:'ristorante',name:'Osteria Francescana',city:'Modena',addr:'Via Stella 22',lat:44.6450,lng:10.9250,website:'https://osteriafrancescana.it',desc:'Il ristorante di Massimo Bottura. ⭐⭐⭐ confermato Michelin 2025 e 2026. Tre Forchette GR 96/100 — primo in Italia.',awards:[{t:'michelin',l:'⭐⭐⭐ Tre Stelle Michelin 2025+2026'},{t:'gambero',l:'Tre Forchette GR 2024 — 96/100 (1° Italia)'},{t:'laliste',l:"World's 50 Best — Top 10"}]},
+  {id:2,prov:'MO',cat:'ristorante',name:"L'Erba del Re",city:'Modena',addr:'Via Castelmaraldo 45',lat:44.6460,lng:10.9270,website:'https://lerbadelre.it',desc:'Chef Luca Marchini. ⭐ Michelin 2025+2026.',awards:[{t:'michelin',l:'⭐ Stella Michelin 2025+2026'},{t:'gambero',l:'Due Forchette GR 2024'}]},
+  {id:3,prov:'MO',cat:'ristorante',name:'Alto',city:'Fiorano Modenese',addr:'Via Circondariale San Francesco 2',lat:44.5360,lng:10.8140,website:'https://altoristorante.com',desc:'Chef Mattia Trabetti. Nuova ⭐ Michelin 2025. Confermata 2026. Rooftop Executive Spa Hotel.',awards:[{t:'michelin',l:'⭐ Nuova Stella Michelin 2025'},{t:'michelin',l:'⭐ Stella Michelin 2026 confermata'}]},
+  {id:4,prov:'MO',cat:'ristorante',name:'Al Gatto Verde',city:'Modena',addr:'Via Santa Caterina 27',lat:44.6465,lng:10.9285,website:'https://www.algattoverde.it',desc:'Bottura & Rosval. ⭐ nuova 2025. Stella Verde 2026.',awards:[{t:'michelin',l:'⭐ Nuova Stella Michelin 2025'},{t:'michelin',l:'⭐ Stella Michelin 2026 + Stella Verde'}]},
+  {id:5,prov:'MO',cat:'ristorante',name:'Hosteria Giusti',city:'Modena',addr:'Vicolo Squallore 46',lat:44.6470,lng:10.9240,website:'https://www.hosteriagiusti.it',desc:'⭐ Michelin 2025. Annessa alla salumeria Giusti 1605.',awards:[{t:'michelin',l:'⭐ Stella Michelin 2025'}]},
+  {id:6,prov:'MO',cat:'ristorante',name:'Magnagallo',city:'Campogalliano',addr:'Via Cavour 2',lat:44.6880,lng:10.8350,website:'https://www.magnagallo.it',desc:'⭐ Michelin 2025. Cucina modenese di territorio.',awards:[{t:'michelin',l:'⭐ Stella Michelin 2025'}]},
+  {id:7,prov:'MO',cat:'ristorante',name:'Cavallino',city:'Maranello',addr:'Via Abetone Inf. 1',lat:44.5260,lng:10.8650,website:'https://www.cavallinoristorante.com',desc:'⭐ Nuova Stella Michelin 2026 (19 nov 2025, Teatro Regio Parma).',awards:[{t:'michelin',l:'⭐ Nuova Stella Michelin 2026'}]},
+  {id:8,prov:'RE',cat:'ristorante',name:'Arnaldo – Clinica Gastronomica',city:'Rubiera (RE)',addr:'Piazza XXIV Maggio 3',lat:44.6540,lng:10.7860,website:'https://www.clinicagastronomica.com',desc:'Dal 1927. ⭐ Michelin 2025 con Targa 65 anni. ⚠️ Non confermata Guida 2026.',awards:[{t:'michelin',l:'⭐ Stella Michelin 2025 + Targa 65 anni'},{t:'michelin',l:'⚠️ Non in Guida Michelin 2026'}]},
+  {id:9,prov:'RE',cat:'ristorante',name:'Osteria del Viandante',city:'Rubiera (RE)',addr:'Piazza XXIV Maggio 15',lat:44.6555,lng:10.7845,website:'https://osteriadelviandante.com',desc:'⭐ Michelin 2025+2026. Stella Verde 2025. Chef Jacopo Malpeli.',awards:[{t:'michelin',l:'⭐ Stella Michelin 2025+2026'},{t:'michelin',l:'Stella Verde Michelin 2025'}]},
+  {id:10,prov:'RE',cat:'ristorante',name:"Ca' Matilde",city:'Rubbianino (RE)',addr:'Via Tolara 6',lat:44.6220,lng:10.6690,website:'https://www.camatilde.it',desc:'⭐ Michelin 2025+2026. Stella Verde 2026. Orto biodinamico 5.000 mq.',awards:[{t:'michelin',l:'⭐ Stella Michelin 2025+2026'},{t:'michelin',l:'⭐ Stella Verde Michelin 2026'}]},
+  {id:11,prov:'MO',cat:'osteria',name:'Trattoria Entrà',city:'Finale Emilia (MO)',addr:'Via delle Mura',lat:44.8330,lng:11.2970,website:'https://www.trattoriaentra.it',desc:'🐌 Chiocciola Slow Food 2025+2026. Premio Cucina Regionale 2025.',awards:[{t:'slowfood',l:'🐌 Chiocciola Slow Food 2025+2026'},{t:'slowfood',l:'Premio Cucina Regionale 2025'}]},
+  {id:12,prov:'MO',cat:'osteria',name:'La Lanterna di Diogene',city:'Bomporto (MO)',addr:'Via Vittorio Veneto',lat:44.7270,lng:11.0370,website:'https://www.lalanternadidiogene.it',desc:'🐌 Chiocciola Slow Food 2025+2026.',awards:[{t:'slowfood',l:'🐌 Chiocciola Slow Food 2025+2026'}]},
+  {id:13,prov:'MO',cat:'osteria',name:'Osteria di Rubbiara',city:'Nonantola (MO)',addr:'Via Risaia 2',lat:44.6840,lng:11.0490,website:'https://www.osteriadirubbiara.it',desc:'Italo Pedroni. 🐌 Chiocciola Slow Food 2025+2026. Produce ABT DOP.',awards:[{t:'slowfood',l:'🐌 Chiocciola Slow Food 2025+2026'},{t:'vinegar',l:'2° Palio ABT Spilamberto 2024'}]},
+  {id:14,prov:'MO',cat:'osteria',name:'Il Cantacucco',city:'Zocca (MO)',addr:'Via Motte 12',lat:44.3390,lng:10.9950,website:'https://www.ilcantacucco.it',desc:'🐌 Chiocciola Slow Food 2025+2026. Appennino modenese.',awards:[{t:'slowfood',l:'🐌 Chiocciola Slow Food 2025+2026'}]},
+  {id:15,prov:'MO',cat:'osteria',name:'La Vecchia Scuola',city:'Montese (MO)',addr:'Via Nazionale',lat:44.3520,lng:10.9420,website:'https://www.lavecchiascuolamontese.it',desc:'🐌 Nuova Chiocciola Slow Food 2026 (new entry ott. 2025).',awards:[{t:'slowfood',l:'🐌 Nuova Chiocciola Slow Food 2026'}]},
+  {id:16,prov:'RE',cat:'osteria',name:'La Badessa',city:'Casalgrande (RE)',addr:'Via Provinciale',lat:44.5760,lng:10.7430,website:'https://www.labadessa.it',desc:'🐌 Chiocciola Slow Food 2025+2026.',awards:[{t:'slowfood',l:'🐌 Chiocciola Slow Food 2025+2026'}]},
+  {id:17,prov:'RE',cat:'osteria',name:'Arrogant Pub',city:'Reggio Emilia',addr:'Via Olmo 2',lat:44.6960,lng:10.6250,website:'https://www.arrogantpub.it',desc:'🐌 Chiocciola Slow Food 2025+2026. Premio Birra in Osteria 2025.',awards:[{t:'slowfood',l:'🐌 Chiocciola Slow Food 2025+2026'},{t:'slowfood',l:'Premio Birra in Osteria 2025'}]},
+  {id:18,prov:'MO',cat:'cantina',name:'Cantina della Volta',city:'Bomporto (MO)',addr:'Via per Modena 82',lat:44.7390,lng:11.0230,website:'https://cantinadellavolta.com',desc:'Tre Bicchieri GR 2025+2026. Lambrusco Sorbara Metodo Classico.',awards:[{t:'gambero',l:'Tre Bicchieri GR 2025'},{t:'gambero',l:'Tre Bicchieri GR 2026 — Sorbara Brut Rosé M.Cl.'}]},
+  {id:19,prov:'MO',cat:'cantina',name:'Alberto Paltrinieri',city:'Bomporto (MO)',addr:'Via Cristo 49',lat:44.7410,lng:11.0280,website:'https://www.cantinapaltrinieri.it',desc:'Tre Bicchieri GR 2025 (Leclisse 2023) + 2026 (Piria 2024). Bio.',awards:[{t:'gambero',l:'Tre Bicchieri GR 2025 — Leclisse 2023'},{t:'gambero',l:'Tre Bicchieri GR 2026 — Piria 2024'}]},
+  {id:20,prov:'MO',cat:'cantina',name:'Cavicchioli U. & Figli',city:'San Prospero (MO)',addr:'Via Canaletto 52',lat:44.7580,lng:11.0140,website:'https://www.cavicchioli.it',desc:'Tre Bicchieri GR 2025+2026 (Vigna del Cristo 2024).',awards:[{t:'gambero',l:'Tre Bicchieri GR 2025'},{t:'gambero',l:'Tre Bicchieri GR 2026 — Vigna del Cristo 2024'}]},
+  {id:21,prov:'MO',cat:'cantina',name:'Cantina di Carpi e Sorbara',city:'Carpi (MO)',addr:'Via Cavata 87',lat:44.7870,lng:10.8830,website:'https://www.cantinadicarpi.it',desc:'Tre Bicchieri GR 2025 — Omaggio Gino Friedmann.',awards:[{t:'gambero',l:'Tre Bicchieri GR 2025 — Omaggio Gino Friedmann'}]},
+  {id:22,prov:'MO',cat:'cantina',name:'Cantina Settecani',city:'Castelvetro (MO)',addr:'Via Modena 184',lat:44.5120,lng:10.9470,website:'https://www.cantinasettecani.it',desc:'Tre Bicchieri GR 2025+2026. Lambrusco Grasparossa bio.',awards:[{t:'gambero',l:'Tre Bicchieri GR 2025'},{t:'gambero',l:'Tre Bicchieri GR 2026 — Vini del Re 2024'}]},
+  {id:23,prov:'MO',cat:'cantina',name:'Fattoria Moretto',city:'Castelvetro (MO)',addr:'Via Tiberia 13',lat:44.5100,lng:10.9500,website:'https://www.fattoriamoretto.it',desc:'Tre Bicchieri GR 2025+2026 (Grasparossa Semprebon 2024).',awards:[{t:'gambero',l:'Tre Bicchieri GR 2025'},{t:'gambero',l:'Tre Bicchieri GR 2026 — Semprebon 2024'}]},
+  {id:24,prov:'MO',cat:'cantina',name:'Cleto Chiarli Tenute Agricole',city:'Modena',addr:'Via Bellinzona 6',lat:44.6380,lng:10.9140,website:'https://www.chiarli.it',desc:'Tre Bicchieri GR 2025+2026. 150+ anni di storia del Lambrusco.',awards:[{t:'gambero',l:'Tre Bicchieri GR 2025'},{t:'gambero',l:'Tre Bicchieri GR 2026 — Cialdini 2024'}]},
+  {id:25,prov:'RE',cat:'cantina',name:'Medici Ermete',city:'Gaida (RE)',addr:'Via I. Newton 13',lat:44.6780,lng:10.5860,website:'https://www.medicias.com',desc:'Tre Bicchieri GR 2025+2026. Record: 17 anni consecutivi — primato assoluto Guida Vini d\'Italia.',awards:[{t:'gambero',l:'Tre Bicchieri GR 2025'},{t:'gambero',l:'Tre Bicchieri GR 2026 — Concerto 2024 (17° anno record)'}]},
+  {id:26,prov:'MO',cat:'cantina',name:'Garuti Vini',city:'Sorbara (MO)',addr:'Via per Solara 6',lat:44.7350,lng:11.0200,website:'https://www.garutivini.it',desc:'Gallo Nero Slow Wine 2024.',awards:[{t:'slowfood',l:'Gallo Nero Slow Wine 2024'}]},
+  {id:27,prov:'MO',cat:'acetaia',name:'Acetaia Antichi',city:'Modena',addr:'Zona collinare modenese',lat:44.5900,lng:10.9200,website:'https://www.acetaiaantichi.it',desc:'1° Palio ABT Spilamberto 2024 — record storico 323.617 pt.',awards:[{t:'vinegar',l:'🏆 1° Palio ABT 2024 (record 323.617 pt)'}]},
+  {id:28,prov:'MO',cat:'acetaia',name:'La Vecchia Dispensa',city:'Castelvetro (MO)',addr:'Via Roncobello 4',lat:44.5050,lng:10.9600,website:'https://www.lavecchiadispensa.it',desc:'USI Vinegar Competition 2024: Doppio Oro + Miglior Produttore Italia. Great Taste Awards — Perla Nera.',awards:[{t:'vinegar',l:'USI 2024 — Doppio Oro + Miglior Produttore Italia'},{t:'vinegar',l:'Great Taste Awards 2024 — Perla Nera'}]},
+  {id:29,prov:'MO',cat:'acetaia',name:'Acetaia Giuseppe Giusti',city:'Modena',addr:'Via Quattro Cipressi 155',lat:44.6320,lng:10.9310,website:'https://giusti.com',desc:'Fondata 1605. Acetaia più antica del mondo ancora attiva.',awards:[{t:'other',l:"TripAdvisor Travellers' Choice 2024"},{t:'other',l:'Acetaia più antica del mondo (1605)'}]},
+  {id:30,prov:'MO',cat:'acetaia',name:'Acetaia Malpighi',city:'Modena',addr:'Via Marzadori 179',lat:44.6290,lng:10.9370,website:'https://www.acetaiamalpighi.it',desc:'Italy Food Awards 2024 – Premio Speciale Eccellenze.',awards:[{t:'other',l:'Italy Food Awards 2024 — Premio Eccellenze'}]},
+  {id:31,prov:'MO',cat:'acetaia',name:'Acetum – Casa Mazzetti',city:'Cavezzo (MO)',addr:'Via Cavour 300',lat:44.6440,lng:10.9400,website:'https://www.casamazzetti.it',desc:'100 Eccellenze Italiane a Montecitorio 2024.',awards:[{t:'other',l:'100 Eccellenze Italiane 2024 — Montecitorio'}]},
+  {id:32,prov:'MO',cat:'acetaia',name:'Consorteria ABT Spilamberto',city:'Spilamberto (MO)',addr:'Piazzale Rangoni',lat:44.5400,lng:11.0150,website:'https://www.consorteria-abtm.it',desc:'58° Palio ABT 2024 (1.854 campioni). Museo del Balsamico.',awards:[{t:'vinegar',l:'58° Palio ABT 2024 — 1.854 campioni valutati'}]},
+  {id:33,prov:'MO',cat:'caseificio',name:"4 Madonne Caseificio dell'Emilia",city:'Modena',addr:'Via Collegarola 101',lat:44.6580,lng:10.8980,website:'https://www.4madonne.it',desc:"TripAdvisor Travellers' Choice 2024. WCA 2024.",awards:[{t:'other',l:"TripAdvisor Travellers' Choice 2024"},{t:'cheese',l:'World Cheese Awards 2024 — Medaglia'}]},
+  {id:34,prov:'MO',cat:'caseificio',name:'Caseificio Dismano',city:'Montese (MO)',addr:'Via Dismano',lat:44.3460,lng:10.9540,website:'https://www.caseificiodismano.it',desc:'Gold WCA 2024 — PR 30-39 mesi.',awards:[{t:'cheese',l:'⭐ Gold WCA 2024 — PR 30-39 mesi'},{t:'cheese',l:'Silver WCA 2024 — PR < 23 mesi'}]},
+  {id:35,prov:'RE',cat:'caseificio',name:'Latteria Sociale Moderna',city:'Bibbiano (RE)',addr:'Via Monti',lat:44.6620,lng:10.4710,website:'https://www.latteriamoderna.it',desc:'Super Gold WCA 2024 — PR 30-39 mesi. Cerimonia WCA a Reggio Emilia.',awards:[{t:'cheese',l:'⭐⭐ SUPER GOLD WCA 2024 — PR 30-39 mesi'}]},
+  {id:36,prov:'RE',cat:'caseificio',name:'Caseifici Granterre – La Nuova 2000',city:'Cavriago (RE)',addr:'Via Argine Crostolo',lat:44.6990,lng:10.5250,website:'https://www.granterre.it',desc:'Super Gold WCA 2024 — PR +40 mesi.',awards:[{t:'cheese',l:'⭐⭐ SUPER GOLD WCA 2024 — PR +40 mesi'}]},
+  {id:37,prov:'RE',cat:'caseificio',name:'Casearia F.lli Dotti',city:'Bibbiano (RE)',addr:'Via Giacosa',lat:44.6650,lng:10.4680,website:'https://www.caseificiodotti.it',desc:'Super Gold WCA 2024 — PR 30-39 mesi.',awards:[{t:'cheese',l:'⭐⭐ SUPER GOLD WCA 2024 — PR 30-39 mesi'}]},
+  {id:38,prov:'RE',cat:'caseificio',name:'Antica Fattoria Scalabrini',city:'Bibbiano (RE)',addr:'Via Scandiano',lat:44.6600,lng:10.4720,website:'https://www.fattoriascalabrini.it',desc:'Super Gold WCA 2024 — PR 30-39 mesi.',awards:[{t:'cheese',l:'⭐⭐ SUPER GOLD WCA 2024 — PR 30-39 mesi'}]},
+  {id:39,prov:'RE',cat:'caseificio',name:'Caseificio Sociale Allegro',city:'Castelnovo di Sotto (RE)',addr:'Via Mazzini',lat:44.7140,lng:10.5600,website:'https://www.caseificionuovosanpaolo.it',desc:'Silver WCA 2024. ICDA 2024. WineHunter Award 2024.',awards:[{t:'cheese',l:'Silver WCA 2024'},{t:'cheese',l:'ICDA 2024'},{t:'other',l:'WineHunter Award 2024'}]},
+  {id:40,prov:'MO',cat:'hotel',name:'Casa Maria Luigia',city:'Campogalliano (MO)',addr:'Strada Statale Nuova Estense',lat:44.6880,lng:10.8510,website:'https://casamarialuigia.com',desc:"Bottura & Gilmore. Tre Chiavi Michelin 2024. FT Miglior B&B del Mondo. World's 50 Best Hotels.",awards:[{t:'michelin',l:'🗝️🗝️🗝️ Tre Chiavi Michelin 2024'},{t:'laliste',l:"FT Miglior B&B del Mondo"},{t:'laliste',l:"World's 50 Best Hotels"}]},
+  {id:41,prov:'MO',cat:'hotel',name:'Museo Enzo Ferrari',city:'Maranello (MO)',addr:'Via Dino Ferrari 43',lat:44.5290,lng:10.8660,website:'https://www.museomaranello.ferrari.com',desc:'TripAdvisor Best of the Best 2024.',awards:[{t:'other',l:'TripAdvisor Best of the Best 2024'}]},
+  {id:42,prov:'MO',cat:'hotel',name:'Executive Spa Hotel',city:'Fiorano Modenese (MO)',addr:'Via Ghiarola Vecchia 19',lat:44.5370,lng:10.8190,website:'https://www.executivespahotel.it',desc:'Booking.com Traveller Review Award 2024. #1 TripAdvisor Fiorano. Ospita il ristorante Alto ⭐.',awards:[{t:'other',l:'Booking.com Traveller Review Award 2024'}]},
+  {id:43,prov:'MO',cat:'borgo',name:'Castelvetro di Modena',city:'Castelvetro (MO)',addr:'Centro storico medievale',lat:44.5140,lng:10.9430,website:'https://www.comune.castelvetro-di-modena.mo.it',desc:'Bandiera Arancione TCI 2024-2026.',awards:[{t:'touring',l:'🟠 Bandiera Arancione TCI 2024-2026'}]},
+  {id:44,prov:'MO',cat:'borgo',name:'Fanano',city:'Fanano (MO)',addr:'Parco del Frignano',lat:44.2010,lng:10.7980,website:'https://www.comune.fanano.mo.it',desc:'Bandiera Arancione TCI 2024-2026.',awards:[{t:'touring',l:'🟠 Bandiera Arancione TCI 2024-2026'}]},
+  {id:45,prov:'MO',cat:'borgo',name:'Sestola',city:'Sestola (MO)',addr:'Monte Cimone',lat:44.2340,lng:10.7720,website:'https://www.comune.sestola.mo.it',desc:'Bandiera Arancione TCI 2024-2026.',awards:[{t:'touring',l:'🟠 Bandiera Arancione TCI 2024-2026'}]},
+  {id:46,prov:'MO',cat:'borgo',name:'Fiumalbo',city:'Fiumalbo (MO)',addr:'Alto Appennino Modenese',lat:44.2040,lng:10.6470,website:'https://www.comune.fiumalbo.mo.it',desc:'Bandiera Arancione TCI 2024-2026.',awards:[{t:'touring',l:'🟠 Bandiera Arancione TCI 2024-2026'}]},
+  {id:47,prov:'MO',cat:'monumento',name:'Museo Enzo Ferrari Modena',city:'Modena',addr:'Via Paolo Ferrari 85',lat:44.6463,lng:10.9266,website:'https://www.museomaranello.ferrari.com',desc:'TripAdvisor Best of the Best 2024. Architettura iconica. Teatro Pavarotti ha ospitato Michelin 2025.',awards:[{t:'other',l:'TripAdvisor Best of the Best 2024'}]},
+  {id:48,prov:'MO',cat:'monumento',name:'Galleria Estense',city:'Modena',addr:"Largo Porta Sant'Agostino 337",lat:44.6450,lng:10.9256,website:'https://www.galleria.estense.beniculturali.it',desc:'Manoscritti Estensi patrimonio UNESCO.',awards:[{t:'other',l:'Manoscritti Estensi — Patrimonio UNESCO'}]},
+  {id:49,prov:'RE',cat:'monumento',name:'Sala del Tricolore',city:'Reggio Emilia',addr:'Piazza Prampolini',lat:44.6966,lng:10.6312,website:'https://www.musei.re.it',desc:'Culla del Tricolore Italiano (1797). Sede WCA 2024.',awards:[{t:'other',l:'Culla del Tricolore Italiano (1797)'},{t:'other',l:'Sede World Cheese Awards 2024'}]},
+];
 
+const ROUTES=[
+  {id:'r1',title:'La Via del Lambrusco',emoji:'🍷',color:'#7d3c98',bg:'linear-gradient(135deg,#7d3c98,#4a1a6e)',km:'~65 km',duration:'1 giornata',desc:'Dal Sorbara alla Grasparossa: viaggio tra le denominazioni DOC del Lambrusco modenese attraverso cantine pluripremiate dal Gambero Rosso. Degustazioni, vigneti e cantina tour.',tags:['Enoturismo','Lambrusco DOC','Tre Bicchieri GR','Auto consigliata'],stops:[{placeId:21,note:'Carpi — Cantina di Carpi e Sorbara'},{placeId:19,note:'Bomporto — Paltrinieri, bio artigianale'},{placeId:18,note:'Bomporto — Cantina della Volta, M.Cl.'},{placeId:20,note:'San Prospero — Cavicchioli, Vigna del Cristo'},{placeId:22,note:'Castelvetro — Settecani, Grasparossa bio'},{placeId:23,note:'Castelvetro — Fattoria Moretto'},{placeId:24,note:'Modena — Cleto Chiarli, 150 anni di storia'}],website:'https://www.stradadellelambrusco.it'},
+  {id:'r2',title:'Motor Valley Gourmet',emoji:'🏎️',color:'#c0392b',bg:'linear-gradient(135deg,#c0392b,#7a1010)',km:'~40 km',duration:'1–2 giorni',desc:'Velocità e cucina d\'eccellenza nel cuore della Motor Valley. Dal Museo Ferrari alle stelle Michelin di Maranello e Fiorano, abbinando la passione per i motori all\'alta gastronomia.',tags:['Motor Valley','Michelin','UNESCO','Stranieri'],stops:[{placeId:47,note:'Modena — Museo Enzo Ferrari'},{placeId:1,note:'Modena — Osteria Francescana ⭐⭐⭐'},{placeId:4,note:'Modena — Al Gatto Verde ⭐ + Stella Verde'},{placeId:42,note:'Fiorano — Executive Spa Hotel + Alto ⭐'},{placeId:41,note:'Maranello — Museo Ferrari Maranello'},{placeId:7,note:'Maranello — Cavallino ⭐ Michelin 2026'}],website:'https://www.motorvalley.it'},
+  {id:'r3',title:"Oro Nero: L'Aceto Balsamico",emoji:'🫙',color:'#d35400',bg:'linear-gradient(135deg,#d35400,#8a2a00)',km:'~35 km',duration:'Mezza giornata',desc:"Alla scoperta del prodotto più antico e prezioso di Modena: l'Aceto Balsamico Tradizionale DOP. Visite alle acetaie storiche pluripremiate, museo e batterie di botti.",tags:['ABT DOP','Slow Food','UNESCO','Degustazione'],stops:[{placeId:29,note:'Modena — Acetaia Giusti 1605'},{placeId:30,note:'Modena — Acetaia Malpighi'},{placeId:31,note:'Cavezzo — Acetum/Casa Mazzetti'},{placeId:13,note:'Nonantola — Osteria Rubbiara (produce ABT)'},{placeId:32,note:'Spilamberto — Consorteria + Museo ABT'},{placeId:27,note:'Spilamberto — Acetaia Antichi (1° Palio 2024)'},{placeId:28,note:'Castelvetro — La Vecchia Dispensa'}],website:'https://www.consorteria-abtm.it'},
+  {id:'r4',title:'Parmigiano Reggiano: I Super Gold',emoji:'🧀',color:'#d4ac0d',bg:'linear-gradient(135deg,#d4ac0d,#9a6e00)',km:'~55 km',duration:'1 giornata',desc:'Tour tra i caseifici vincitori dei World Cheese Awards 2024 — svoltisi a Reggio Emilia — e le latterie DOP. Visite alle forme in stagionatura, degustazioni guidate.',tags:['Parmigiano DOP','WCA Super Gold','Reggio Emilia','Degustazione'],stops:[{placeId:49,note:'Reggio Emilia — Sala del Tricolore (sede WCA 2024)'},{placeId:35,note:'Bibbiano — Latteria Moderna (Super Gold WCA)'},{placeId:37,note:'Bibbiano — F.lli Dotti (Super Gold WCA)'},{placeId:38,note:'Bibbiano — Antica Fattoria Scalabrini (Super Gold)'},{placeId:36,note:'Cavriago — Granterre La Nuova 2000 (Super Gold +40m)'},{placeId:39,note:'Castelnovo S. — Caseificio Allegro (Silver WCA)'}],website:'https://www.parmigiano-reggiano.it'},
+  {id:'r5',title:"Borghi e Sapori dell'Appennino",emoji:'🏰',color:'#7e5109',bg:'linear-gradient(135deg,#7e5109,#4a2c00)',km:'~80 km',duration:'1–2 giorni',desc:'Viaggio lento tra borghi Bandiera Arancione TCI, trattorie con Chiocciola Slow Food e formaggi di montagna premiati. Panorami, castelli e cucina autentica.',tags:['Bandiera Arancione TCI','Slow Food','Montagna','Turismo lento'],stops:[{placeId:43,note:'Castelvetro — Borgo medievale del Grasparossa'},{placeId:14,note:'Zocca — Il Cantacucco (Chiocciola Slow Food)'},{placeId:15,note:'Montese — La Vecchia Scuola (Chiocciola 2026)'},{placeId:34,note:'Montese — Caseificio Dismano (Gold WCA 2024)'},{placeId:45,note:'Sestola — Borgo ai piedi del Cimone'},{placeId:46,note:'Fiumalbo — Borgo in pietra più autentico'}],website:'https://www.touringclub.it'},
+  {id:'r6',title:'Tour delle Stelle: Rubiera & Colline RE',emoji:'⭐',color:'#1e4d6b',bg:'linear-gradient(135deg,#1e4d6b,#0a2940)',km:'~30 km',duration:'1 giornata',desc:"Concentrato di stelle Michelin e Slow Food nel reggiano: Rubiera con il suo polo stellato, Ca' Matilde con l'orto biodinamico. Abbinamento con Lambrusco Concerto di Medici Ermete.",tags:['Michelin','Reggio Emilia','Stella Verde','Gambero Rosso'],stops:[{placeId:9,note:'Rubiera — Osteria del Viandante ⭐ + Stella Verde'},{placeId:8,note:'Rubiera — Arnaldo Clinica Gastronomica (65 anni)'},{placeId:16,note:'Casalgrande — La Badessa (Chiocciola SF)'},{placeId:17,note:'Reggio Emilia — Arrogant Pub (Chiocciola + Birra)'},{placeId:25,note:'Gaida — Medici Ermete (17 Tre Bicchieri!)'},{placeId:10,note:"Rubbianino — Ca' Matilde ⭐ + Stella Verde 2026"}],website:'https://www.visitemiliaromagna.com'},
+];
+
+const EVENTS=[
+  {id:'e1',stagione:'primavera',prov:'MO',title:'Festa dei Ciliegi in Fiore – Vignola',month:'Aprile',dateStr:'Aprile (1° e 2° weekend)',color:'#e84393',type:'Sagra',place:'Vignola (MO)',desc:"Celebra la fioritura dei ciliegi vignolesi con mercati di prodotti tipici, spettacoli e degustazioni. Vignola è capitale italiana della ciliegia IGP.",placeId:null,website:'https://www.comune.vignola.mo.it'},
+  {id:'e2',stagione:'primavera',prov:'MO',title:'Cantine Aperte – Movimento Turismo del Vino',month:'Maggio',dateStr:'Ultimo weekend di Maggio',color:'#7d3c98',type:'Enoturismo',place:'Province MO e RE',desc:"Le cantine aderenti al Movimento Turismo del Vino aprono al pubblico con degustazioni guidate, visite ai vigneti e food pairing. Partecipano Cantina della Volta, Paltrinieri, Medici Ermete e molte altre.",placeId:18,website:'https://www.movimentoturismovino.it'},
+  {id:'e3',stagione:'primavera',prov:'MO',title:'Motor Valley Fest – Modena',month:'Giugno',dateStr:'5–8 giugno 2025 (annuale inizio giugno)',color:'#c0392b',type:'Festival',place:'Modena (centro storico)',desc:"Il grande festival della Terra dei Motori. Ferrari, Lamborghini, Maserati, Ducati e 40+ brand animano il centro storico UNESCO di Modena. 7ª edizione nel 2025: gratuito, oltre 10 piazze coinvolte.",placeId:47,website:'https://www.motorvalley.it/motorvalleyfest/'},
+  {id:'e4',stagione:'primavera',prov:'MO',title:'Centenaria Fiera di Maggio – Castelnuovo Rangone',month:'Maggio',dateStr:'Ultimo sabato/domenica di Maggio',color:'#27ae60',type:'Fiera',place:'Castelnuovo Rangone (MO)',desc:"Una delle fiere più antiche della provincia modenese con prodotti alimentari, salumi e prodotti enogastronomici tipici.",placeId:null,website:'https://www.comune.castelnuovorangone.mo.it'},
+  {id:'e5',stagione:'estate',prov:'MO',title:'Fiera di San Giovanni e Palio ABT – Spilamberto',month:'Giugno',dateStr:'21–24 giugno (San Giovanni, patrono)',color:'#d35400',type:'Concorso',place:'Spilamberto (MO)',desc:"La 143ª Fiera di San Giovanni ospita il Palio dell'Aceto Balsamico Tradizionale — il più importante concorso mondiale di ABT. Nel 2024: 1.854 campioni, record assoluto 323.617 pt per Acetaia Antichi.",placeId:32,website:'https://www.consorteria-abtm.it/palio/'},
+  {id:'e6',stagione:'estate',prov:'MO',title:'Vignola è Tempo di Ciliegie',month:'Giugno',dateStr:'Fine maggio – inizio giugno',color:'#e84393',type:'Sagra',place:'Vignola (MO)',desc:"La manifestazione celebra la ciliegia IGP di Vignola con mercati dei produttori locali, degustazioni e spettacoli.",placeId:null,website:'https://www.comune.vignola.mo.it'},
+  {id:'e7',stagione:'estate',prov:'MO',title:'Acetaie Aperte – Consorzio ABT',month:'Settembre',dateStr:'Ultima domenica di Settembre',color:'#d35400',type:'Open day',place:'Provincia di Modena',desc:"Oltre 30 acetaie aprono al pubblico con visite guidate, degustazioni tra batterie, botti e tini. Partecipano Giusti, Malpighi, Vecchia Dispensa e molte altre.",placeId:29,website:'https://www.museodelbalsamicotradizionale.org/eventi/'},
+  {id:'e8',stagione:'estate',prov:'RE',title:'Festa di San Prospero – Reggio Emilia',month:'Novembre',dateStr:'24 novembre (patrono di Reggio Emilia)',color:'#1e4d6b',type:'Festa patronale',place:'Reggio Emilia (centro)',desc:"Cerimonie religiose e manifestazioni gastronomiche per il Santo Patrono di Reggio Emilia. In Piazza San Prospero e nelle vie del centro storico.",placeId:49,website:'https://www.reggioemiliawelcome.it'},
+  {id:'e9',stagione:'autunno',prov:'RE',title:'World Cheese Awards (edizione itinerante)',month:'Settembre/Ottobre',dateStr:'Settembre/Ottobre (sede annuale variabile)',color:'#d4ac0d',type:'Concorso internazionale',place:'Reggio Emilia (edizione 2024)',desc:"Il più grande concorso caseario mondiale. L'edizione 2024 si è svolta alla Sala del Tricolore di Reggio Emilia, con 4 Super Gold al Parmigiano Reggiano. Oltre 4.000 formaggi da 40 Paesi.",placeId:49,website:'https://www.gff.co.uk/competition/world-cheese-awards/'},
+  {id:'e10',stagione:'autunno',prov:'MO',title:'Cerimonia Guida Michelin Italia',month:'Novembre',dateStr:'Novembre (sede annuale variabile)',color:'#9b2918',type:'Premio internazionale',place:'Modena 2024 / Parma 2025',desc:"La cerimonia Michelin 2025 si tenne al Teatro Pavarotti di Modena (5 nov 2024). Nel 2025 al Teatro Regio di Parma (Guida 2026). Cavallino di Maranello nuova stella 2026.",placeId:1,website:'https://guide.michelin.com/it/it'},
+  {id:'e11',stagione:'autunno',prov:'MO',title:"Guida Vini d'Italia – Gambero Rosso (Tre Bicchieri)",month:'Ottobre',dateStr:'Ottobre (presentazione annuale)',color:'#7d3c98',type:'Premio enologico',place:'Roma (assegnazione nazionale)',desc:"Presentazione annuale dei Tre Bicchieri. Nel 2025 e 2026 premiati 7 cantine MO + Medici Ermete RE. Record storico: Medici Ermete raggiunge 17 anni consecutivi.",placeId:25,website:'https://www.gamberorosso.it'},
+  {id:'e12',stagione:'autunno',prov:'MO',title:"Osterie d'Italia – Slow Food (Chiocciole)",month:'Ottobre',dateStr:'Ottobre (uscita annuale guida)',color:'#1d6e38',type:'Guida gastronomica',place:'Tutto il territorio',desc:"L'uscita della guida Slow Food. Nel 2026 nuova entry La Vecchia Scuola di Montese. Premi speciali a Trattoria Entrà e Arrogant Pub.",placeId:11,website:'https://www.slowfood.it'},
+  {id:'e13',stagione:'autunno',prov:'RE',title:'Salone del Parmigiano Reggiano',month:'Ottobre',dateStr:'Ottobre',color:'#d4ac0d',type:'Fiera',place:'Montecchio Emilia (RE)',desc:"Il salone dedicato al Parmigiano Reggiano DOP con caseifici, degustazioni e vendita diretta. Focus sulle stagionature premium 24, 36, 48+ mesi.",placeId:36,website:'https://www.parmigiano-reggiano.it'},
+  {id:'e14',stagione:'inverno',prov:'RE',title:'Festa del Tricolore – Reggio Emilia',month:'Gennaio',dateStr:'7 gennaio (anniversario annuale)',color:'#1e4d6b',type:'Anniversario storico',place:'Reggio Emilia (Sala del Tricolore)',desc:"Celebrazione dell'anniversario della nascita del Tricolore Italiano (7 gennaio 1797). Cerimonie istituzionali nella Sala del Tricolore di Piazza Prampolini.",placeId:49,website:'https://www.comune.re.it'},
+  {id:'e15',stagione:'inverno',prov:'MO',title:'Carnevale di Modena – Sandrone e Famiglia',month:'Febbraio/Marzo',dateStr:'Giovedì grasso e martedì grasso',color:'#e84393',type:'Tradizione',place:'Modena (centro storico)',desc:"Il Carnevale modenese con la maschera di Sandrone, la Pulonia e Sgorghiguelo — la 'Famiglia Pavironica'. Sfilata storica nel centro di Modena.",placeId:null,website:'https://www.comune.modena.it'},
+  {id:'e16',stagione:'inverno',prov:'MO',title:'Cottura del Mosto ABT – Spilamberto',month:'Ottobre',dateStr:'Inizio ottobre (tradizione annuale)',color:'#d35400',type:'Tradizione ABT',place:'Spilamberto (MO)',desc:"La cottura del mosto segna l'inizio del ciclo produttivo dell'ABT. La comunità di Spilamberto si riunisce per cuocere il mosto nelle caldaie a cielo aperto — una tradizione descritta già da Virgilio nel I sec. a.C.",placeId:32,website:'https://www.museodelbalsamicotradizionale.org/eventi/'},
+];
+
+let POSTS=[
+  {id:'p1',date:'2025-11-20',cat:'michelin',title:'La cerimonia Michelin 2026 incorona Cavallino di Maranello',placeId:7,author:'Guido Lugli',content:"Il 19 novembre 2025, al Teatro Regio di Parma, si è svolta la cerimonia della Guida Michelin Italia 2026 (71ª edizione). Grande sorpresa per il territorio modenese: il ristorante Cavallino di Maranello ha ottenuto la sua prima stella Michelin.\n\nUna conferma importante anche per Ca' Matilde di Rubbianino (RE), che oltre a conservare la stella ottiene la Stella Verde per l'impegno nella sostenibilità e il suo orto biodinamico di 5.000 mq.\n\nLa guida 2026 conta complessivamente 395 stelle in Italia."},
+  {id:'p2',date:'2025-10-15',cat:'gambero',title:'Medici Ermete: 17 anni consecutivi di Tre Bicchieri — record assoluto',placeId:25,author:'Guido Lugli',content:"Con la presentazione della Guida Vini d'Italia 2026 del Gambero Rosso (ottobre 2025), Medici Ermete di Gaida (RE) ha raggiunto un primato storico assoluto: 17 anni consecutivi di Tre Bicchieri.\n\nIl vino premiato è il Reggiano Lambrusco Concerto 2024. Nessun altro produttore nella storia della guida ha mai raggiunto questa continuità di eccellenza.\n\nConfermate tutte le 7 cantine modenesi con i loro rispettivi vini dell'annata 2024."},
+  {id:'p3',date:'2024-10-12',cat:'slowfood',title:"Slow Food Osterie d'Italia 2025: tutte le Chiocciole MO e RE",placeId:null,author:'Guido Lugli',content:"L'edizione 2025 di Osterie d'Italia (Slow Food Editore, ottobre 2024) ha confermato le Chiocciole della provincia di Modena e Reggio Emilia.\n\nPer Modena: Trattoria Entrà ottiene il Premio Cucina Regionale; confermate La Lanterna di Diogene, Osteria di Rubbiara e Il Cantacucco.\n\nPer Reggio Emilia: confermate La Badessa e Arrogant Pub, quest'ultimo con il Premio Birra in Osteria."},
+  {id:'p4',date:'2024-09-22',cat:'cheese',title:'World Cheese Awards 2024 a Reggio Emilia: 4 Super Gold al Parmigiano',placeId:35,author:'Guido Lugli',content:"Per la prima volta in Italia, i World Cheese Awards 2024 si sono svolti a Reggio Emilia, nella storica Sala del Tricolore.\n\nGrande risultato per il Parmigiano Reggiano: 4 Super Gold assegnati a caseifici reggiani:\n• Latteria Sociale Moderna di Bibbiano (PR 30-39 mesi)\n• Caseifici Granterre La Nuova 2000 di Cavriago (PR +40 mesi)\n• Casearia F.lli Dotti di Bibbiano (PR 30-39 mesi)\n• Antica Fattoria Scalabrini di Bibbiano (PR 30-39 mesi)\n\nPer la provincia di Modena, Gold al Caseificio Dismano di Montese."},
+];
+
+// ══ STATE ══
+let activeCat='all',activeProv={MO:true,RE:true},searchQ='',selectedId=null,currentView='map';
+let activeEvFilter='all';
+let pswUnlocked=false,currentPostId=null;
+const BLOG_PWD='modena2024';
+let map,markers={};
+
+document.addEventListener('DOMContentLoaded',()=>{
+  buildStats();buildCatFilters();buildLegend();initMap();render();
+  populatePlaceSelect();renderRoutes();renderEvents();renderPosts();
+  document.getElementById('search').addEventListener('input',e=>{
+    searchQ=e.target.value.trim().toLowerCase();
+    document.getElementById('clr').style.display=searchQ?'block':'none';
+    render();
+  });
+});
+
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById(name+'-page').classList.add('active');
+  btn.classList.add('active');
+  if(name==='map')setTimeout(()=>map&&map.invalidateSize(),80);
+}
+
+// ── MAP ──
+function buildStats(){
+  const mo=PLACES.filter(p=>p.prov==='MO').length,re=PLACES.filter(p=>p.prov==='RE').length;
+  const mich=PLACES.filter(p=>p.awards.some(a=>a.t==='michelin'&&!a.l.includes('⚠️'))).length;
+  const bicch=PLACES.filter(p=>p.awards.some(a=>a.t==='gambero')).length;
+  document.getElementById('hstats').innerHTML=[{n:PLACES.length,l:'Eccellenze'},{n:mo,l:'Modena'},{n:re,l:'Reggio E.'},{n:mich,l:'Stelle'},{n:bicch,l:'3 Bicchieri'}].map(s=>`<div class="hstat"><strong>${s.n}</strong><small>${s.l}</small></div>`).join('');
+}
+function buildCatFilters(){
+  const w=document.getElementById('cat-filters');
+  w.innerHTML=`<button class="filt active" onclick="setCat('all',this)">Tutti</button>`;
+  Object.entries(CATS).forEach(([k,v])=>w.innerHTML+=`<button class="filt" onclick="setCat('${k}',this)"><span class="dot" style="background:${v.color}"></span>${v.label.split('/')[0].trim()}</button>`);
+}
+function buildLegend(){
+  const w=document.getElementById('leg-items');
+  Object.entries(CATS).forEach(([k,v])=>w.innerHTML+=`<div class="leg-row"><span class="leg-dot" style="background:${v.color}"></span>${v.emoji} ${v.label}</div>`);
+}
+function setCat(cat,btn){activeCat=cat;document.querySelectorAll('.filt').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();}
+function toggleProv(prov,btn){
+  activeProv[prov]=!activeProv[prov];
+  btn.classList.toggle('on-mo',prov==='MO'&&activeProv[prov]);
+  btn.classList.toggle('on-re',prov==='RE'&&activeProv[prov]);
+  if(!activeProv[prov]){btn.style.background='#fff';btn.style.color='var(--muted)';}else{btn.style.background='';btn.style.color='';}
+  render();
+}
+function clearSearch(){searchQ='';document.getElementById('search').value='';document.getElementById('clr').style.display='none';render();}
+function filtered(){
+  return PLACES.filter(p=>{
+    if(!activeProv[p.prov])return false;
+    if(activeCat!=='all'&&p.cat!==activeCat)return false;
+    if(searchQ){const hay=[p.name,p.city,p.desc,...p.awards.map(a=>a.l)].join(' ').toLowerCase();if(!hay.includes(searchQ))return false;}
+    return true;
+  });
+}
+function initMap(){
+  map=L.map('map',{center:[44.58,10.82],zoom:10,zoomControl:false});
+  L.control.zoom({position:'bottomright'}).addTo(map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:19}).addTo(map);
+}
+function makeIcon(p,sel){
+  const c=CATS[p.cat];const s=sel?40:32;
+  return L.divIcon({className:'',html:`<div style="width:${s}px;height:${s}px;background:${c.color};border:${sel?'3px solid #e8cc7a':'2px solid white'};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${sel?16:13}px;box-shadow:0 2px ${sel?10:5}px rgba(0,0,0,${sel?.38:.2})">${c.emoji}</div>`,iconSize:[s,s],iconAnchor:[s/2,s/2]});
+}
+function rebuildMarkers(list){
+  Object.values(markers).forEach(({m})=>map.removeLayer(m));markers={};
+  list.forEach(p=>{const m=L.marker([p.lat,p.lng],{icon:makeIcon(p,p.id===selectedId)}).addTo(map).on('click',()=>selectPlace(p.id));markers[p.id]={m,p};});
+}
+function render(){
+  const list=filtered();document.getElementById('count').textContent=list.length;
+  rebuildMarkers(list);renderSidebar(list);
+  if(currentView==='grid')renderGrid(list);
+  if(selectedId&&!list.find(p=>p.id===selectedId))closeDetail();
+}
+function renderSidebar(list){
+  const el=document.getElementById('list');
+  if(!list.length){el.innerHTML=`<div class="empty"><div class="ei">🔍</div><p>Nessun risultato</p></div>`;return;}
+  el.innerHTML=list.map(p=>{
+    const c=CATS[p.cat];
+    const pv=p.prov==='MO'?`<span class="pcard-prov prov-mo">MO</span>`:`<span class="pcard-prov prov-re">RE</span>`;
+    const bd=p.awards.slice(0,3).map(a=>`<span class="abadge ${AT[a.t].cls}">${AT[a.t].ic} ${trunc(a.l,26)}</span>`).join('');
+    const more=p.awards.length>3?`<span class="abadge ab-other">+${p.awards.length-3}</span>`:'';
+    const web=p.website?`<a class="web-chip" href="${p.website}" target="_blank" onclick="event.stopPropagation()">🌐 Sito</a>`:'';
+    return `<div class="pcard${p.id===selectedId?' sel':''}" onclick="selectPlace(${p.id})">
+      <div class="pcard-top"><div class="pcard-icon" style="background:${c.bg}">${c.emoji}</div>
+      <div><div class="pcard-name">${p.name}</div><div class="pcard-loc">📍 ${p.city} ${pv} ${web}</div></div></div>
+      <div class="awards-row">${bd}${more}</div></div>`;
+  }).join('');
+}
+function renderGrid(list){
+  const el=document.getElementById('grid');
+  if(!list.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="ei">🔍</div><p>Nessun risultato</p></div>`;return;}
+  el.innerHTML=list.map(p=>{
+    const c=CATS[p.cat];
+    const pv=p.prov==='MO'?`<span class="pcard-prov prov-mo">MO</span>`:`<span class="pcard-prov prov-re">RE</span>`;
+    const bd=p.awards.slice(0,2).map(a=>`<span class="abadge ${AT[a.t].cls}">${AT[a.t].ic} ${trunc(a.l,24)}</span>`).join('');
+    const web=p.website?`<a class="web-chip" href="${p.website}" target="_blank" onclick="event.stopPropagation()">🌐 Sito</a>`:'';
+    return `<div class="gcard" onclick="selectAndDetail(${p.id})">
+      <div class="gcard-img" style="background:${c.bg}">${c.emoji}</div>
+      <div class="gcard-body"><div class="gcard-name">${p.name}</div>
+      <div class="gcard-city">📍 ${p.city} ${pv}</div>
+      <div class="gcard-awards">${bd}</div>${web}</div></div>`;
+  }).join('');
+}
+function selectPlace(id){
+  selectedId=id;render();
+  const p=PLACES.find(x=>x.id===id);if(!p)return;
+  if(currentView==='map'){map.flyTo([p.lat,p.lng],14,{duration:.8});openDetail(id);}
+  document.querySelectorAll('.pcard').forEach(c=>{if(c.onclick&&c.onclick.toString().includes(`(${id})`))c.scrollIntoView({block:'nearest',behavior:'smooth'});});
+}
+function selectAndDetail(id){selectedId=id;render();openDetail(id);}
+function openDetail(id){
+  const p=PLACES.find(x=>x.id===id);if(!p)return;
+  const c=CATS[p.cat];
+  document.getElementById('det-cat').textContent=`${c.emoji} ${c.label} · ${p.prov==='MO'?'Prov. Modena':'Prov. Reggio Emilia'}`;
+  document.getElementById('det-name').textContent=p.name;
+  document.getElementById('det-loc').textContent=`📍 ${p.addr}, ${p.city}`;
+  document.getElementById('det-desc').textContent=p.desc;
+  document.getElementById('det-awards').innerHTML=p.awards.map(a=>`<div class="det-award"><span class="aic">${AT[a.t].ic}</span><span>${a.l}</span></div>`).join('');
+  let btns='';
+  if(p.website)btns+=`<button class="det-btn det-web" onclick="window.open('${p.website}','_blank')">🌐 Sito</button>`;
+  btns+=`<button class="det-btn det-link" onclick="openMaps()">📍 Mappe</button>`;
+  btns+=`<button class="det-btn det-share" onclick="sharePlace()">↗ Condividi</button>`;
+  document.getElementById('det-actions').innerHTML=btns;
+  document.getElementById('detail').style.display='block';
+  document.getElementById('detail')._p=p;
+}
+function closeDetail(){document.getElementById('detail').style.display='none';selectedId=null;render();}
+function openMaps(){const p=document.getElementById('detail')._p;if(p)window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name+' '+p.city)}`,'_blank');}
+function sharePlace(){
+  const p=document.getElementById('detail')._p;if(!p)return;
+  const txt=`${CATS[p.cat].emoji} ${p.name} - ${p.city}\n${p.awards[0]?.l||''}\n${p.website||window.location.href}`;
+  if(navigator.share)navigator.share({title:p.name,text:txt});
+  else{navigator.clipboard.writeText(txt);alert('Link copiato!');}
+}
+function setView(v,btn){
+  currentView=v;
+  document.querySelectorAll('.view-tog button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  const mw=document.getElementById('map-wrap'),gv=document.getElementById('grid-view'),sb=document.getElementById('sidebar');
+  if(v==='map'){mw.style.display='flex';gv.style.display='none';sb.style.display='flex';setTimeout(()=>map.invalidateSize(),50);}
+  else{mw.style.display='none';gv.style.display='block';sb.style.display='none';renderGrid(filtered());}
+}
+
+// ── ROUTES ──
+function renderRoutes(){
+  document.getElementById('routes-grid').innerHTML=ROUTES.map(r=>{
+    const stopsHtml=r.stops.slice(0,5).map((s,i)=>{
+      const p=PLACES.find(x=>x.id===s.placeId);if(!p)return'';
+      return `<div class="stop-row" onclick="goToPlace(${p.id})">
+        <div class="stop-num">${i+1}</div>
+        <div class="stop-info"><div class="stop-name">${p.name}</div><div class="stop-city">${s.note}</div></div>
+        <span style="font-size:.65rem;color:var(--gold)">→</span></div>`;
+    }).join('');
+    const more=r.stops.length>5?`<div style="font-size:.6rem;color:var(--muted);padding:3px 4px">+${r.stops.length-5} tappe…</div>`:'';
+    const tags=r.tags.map(t=>`<span class="route-tag">${t}</span>`).join('');
+    return `<div class="route-card">
+      <div class="route-hero" style="background:${r.bg}">
+        <span class="route-emoji">${r.emoji}</span>
+        <div class="route-kms"><strong>${r.km}</strong><span>${r.duration}</span></div>
+      </div>
+      <div class="route-body">
+        <div class="route-title">${r.title}</div>
+        <div class="route-desc">${r.desc}</div>
+        <div class="route-tags">${tags}</div>
+        <div class="route-stops"><h4>📍 Tappe</h4>${stopsHtml}${more}</div>
+      </div>
+      <div class="route-footer">
+        <button class="route-btn rbtn-map" onclick="showRouteOnMap(${r.stops[0].placeId})">🗺️ Vedi sulla mappa</button>
+        ${r.website?`<a class="route-btn rbtn-info" href="${r.website}" target="_blank">🌐 Info</a>`:''}
+      </div></div>`;
+  }).join('');
+}
+function showRouteOnMap(firstId){
+  showPage('map',document.querySelectorAll('.nav-tab')[0]);
+  setTimeout(()=>selectPlace(firstId),350);
+}
+function goToPlace(id){
+  showPage('map',document.querySelectorAll('.nav-tab')[0]);
+  setTimeout(()=>selectPlace(id),350);
+}
+
+// ── EVENTS ──
+function filterEvents(f,btn){
+  activeEvFilter=f;
+  document.querySelectorAll('.season-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  renderEvents();
+}
+function renderEvents(){
+  const el=document.getElementById('events-grid');
+  const list=EVENTS.filter(e=>activeEvFilter==='all'?true:activeEvFilter==='MO'||activeEvFilter==='RE'?e.prov===activeEvFilter:e.stagione===activeEvFilter);
+  if(!list.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="ei">📅</div><p>Nessun evento per questa selezione.</p></div>`;return;}
+  el.innerHTML=list.map(e=>{
+    const pv=e.prov==='MO'?'<span style="font-size:.54rem;background:#e8f0f7;color:#1e4d6b;padding:1px 5px;border-radius:7px;font-weight:600">MO</span>':'<span style="font-size:.54rem;background:#f9eaec;color:#8b2635;padding:1px 5px;border-radius:7px;font-weight:600">RE</span>';
+    const webLink=e.website?`<a class="event-link" href="${e.website}" target="_blank">🌐 Sito</a>`:'';
+    const placeLink=e.placeId?`<button class="event-place-link" onclick="goToPlace(${e.placeId})">🗺️ Attività collegata</button>`:'';
+    return `<div class="event-card">
+      <div class="event-month-bar" style="background:${e.color}">
+        <span class="event-month">📅 ${e.month}</span>
+        <span class="event-type-badge">${e.type}</span>
+      </div>
+      <div class="event-body">
+        <div class="event-title">${e.title}</div>
+        <div class="event-date">🗓️ ${e.dateStr}</div>
+        <div class="event-place">📍 ${e.place} ${pv}</div>
+        <div class="event-desc">${e.desc}</div>
+      </div>
+      <div class="event-links">${webLink}${placeLink}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── BLOG ──
+function renderPosts(){
+  const el=document.getElementById('posts-grid');
+  if(!POSTS.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="ei">📝</div><p>Nessun articolo ancora. Clicca <strong>"Nuovo articolo"</strong>.</p></div>`;return;}
+  const sorted=[...POSTS].sort((a,b)=>b.date.localeCompare(a.date));
+  el.innerHTML=sorted.map(post=>{
+    const pc=POST_CATS[post.cat]||POST_CATS.notizia;
+    const place=PLACES.find(p=>p.id===post.placeId);
+    const dateStr=new Date(post.date).toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});
+    const excerpt=post.content.replace(/\n/g,' ').slice(0,150)+'…';
+    const placeTag=place?`<span class="post-place-tag">${CATS[place.cat].emoji} ${place.name}</span>`:'';
+    return `<div class="post-card" onclick="openPost('${post.id}')">
+      <div class="post-cat-bar" style="background:${pc.color}"></div>
+      <div class="post-body">
+        <div class="post-meta"><span class="post-tag" style="background:${pc.bg};color:${pc.color}">${pc.label}</span><span class="post-date">📅 ${dateStr}</span>${placeTag}</div>
+        <div class="post-title">${post.title}</div>
+        <div class="post-excerpt">${excerpt}</div>
+      </div>
+      <div class="post-footer"><span class="post-author">✍️ ${post.author}</span><button class="post-read" onclick="event.stopPropagation();openPost('${post.id}')">Leggi →</button></div>
+    </div>`;
+  }).join('');
+}
+function openPost(id){
+  const post=POSTS.find(p=>p.id===id);if(!post)return;
+  currentPostId=id;
+  const pc=POST_CATS[post.cat]||POST_CATS.notizia;
+  const place=PLACES.find(p=>p.id===post.placeId);
+  const dateStr=new Date(post.date).toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('pm-tag').innerHTML=`<span style="color:${pc.color}">${pc.label}</span>`;
+  document.getElementById('pm-title').textContent=post.title;
+  document.getElementById('pm-meta').textContent=`📅 ${dateStr}  ·  ✍️ ${post.author}`;
+  document.getElementById('pm-content').textContent=post.content;
+  document.getElementById('pm-place-btn').innerHTML=place?`<button class="pm-place-link" onclick="goToPlace(${place.id})">${CATS[place.cat].emoji} Vai a ${place.name} sulla mappa →</button>`:'';
+  document.getElementById('pm-del-btn').style.display=pswUnlocked?'block':'none';
+  document.getElementById('post-modal').classList.add('show');
+}
+function closePostModal(){document.getElementById('post-modal').classList.remove('show');currentPostId=null;}
+function deleteCurrentPost(){
+  if(!currentPostId||!pswUnlocked)return;
+  if(!confirm('Eliminare questo articolo?'))return;
+  POSTS=POSTS.filter(p=>p.id!==currentPostId);
+  closePostModal();renderPosts();
+}
+function openPostForm(){
+  document.getElementById('pfm').classList.add('show');
+  document.getElementById('pwd-input').value='';
+  document.getElementById('pwd-err').style.display='none';
+  if(!pswUnlocked){document.getElementById('pf-fields').classList.add('form-locked');document.getElementById('pfm-submit').disabled=true;}
+  else{document.getElementById('pf-fields').classList.remove('form-locked');document.getElementById('pfm-submit').disabled=false;}
+}
+function closePostForm(){document.getElementById('pfm').classList.remove('show');}
+function checkPwd(){
+  if(document.getElementById('pwd-input').value===BLOG_PWD){
+    pswUnlocked=true;
+    document.getElementById('pf-fields').classList.remove('form-locked');
+    document.getElementById('pfm-submit').disabled=false;
+    document.getElementById('pwd-gate').style.background='#eaf2e4';
+    document.getElementById('pwd-gate').innerHTML='<span style="color:#1d6e38;font-size:.72rem;font-weight:600">✅ Accesso redazione confermato</span>';
+  } else document.getElementById('pwd-err').style.display='block';
+}
+function populatePlaceSelect(){
+  const sel=document.getElementById('pf-place');
+  [...PLACES].sort((a,b)=>a.name.localeCompare(b.name)).forEach(p=>{
+    const opt=document.createElement('option');opt.value=p.id;opt.textContent=`${CATS[p.cat].emoji} ${p.name} (${p.city})`;sel.appendChild(opt);
+  });
+}
+function submitPost(){
+  if(!pswUnlocked)return;
+  const title=document.getElementById('pf-title').value.trim();
+  const content=document.getElementById('pf-content').value.trim();
+  if(!title||!content){alert('Titolo e testo sono obbligatori.');return;}
+  const placeVal=document.getElementById('pf-place').value;
+  POSTS.unshift({id:'p'+Date.now(),date:new Date().toISOString().split('T')[0],cat:document.getElementById('pf-cat').value,title,placeId:placeVal?parseInt(placeVal):null,author:document.getElementById('pf-author').value||'Guido Lugli',content});
+  renderPosts();closePostForm();
+  document.getElementById('pf-title').value='';document.getElementById('pf-content').value='';
+}
+
+function trunc(s,n){return s.length>n?s.slice(0,n)+'…':s;}
+</script>
 </body>
 </html>
